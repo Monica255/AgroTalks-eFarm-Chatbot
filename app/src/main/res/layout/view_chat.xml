@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/ll_chat_user"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Space
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+        <androidx.cardview.widget.CardView
+            app:cardElevation="3dp"
+            app:cardCornerRadius="18dp"
+            android:layout_margin="8dp"
+            android:layout_width="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/tv_user"
+                android:maxWidth="300dp"
+                android:layout_margin="10dp"
+                android:text="hello im monica"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+    <LinearLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/ll_chat_bot"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.cardview.widget.CardView
+            app:cardBackgroundColor="@color/light_green"
+            app:cardElevation="3dp"
+            app:cardCornerRadius="18dp"
+            android:layout_margin="8dp"
+            android:layout_width="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/tv_chatbot"
+                android:textColor="@color/white"
+                android:maxWidth="300dp"
+                android:layout_margin="10dp"
+                android:text="hello im chatbot, \nwhat can i help you?"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </androidx.cardview.widget.CardView>
+        <Space
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+</LinearLayout>

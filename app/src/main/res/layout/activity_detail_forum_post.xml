@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_user_data"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/img_profile_picture"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:src="@drawable/placeholder"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_close"
+                app:layout_constraintStart_toEndOf="@id/img_profile_picture"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/tv_user_name"
+                    style="@style/TitleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/unknown_name" />
+
+                <TextView
+                    android:id="@+id/tv_timastamp"
+                    style="@style/SmallText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:maxLines="1"
+                    android:textColor="@color/green"
+                    android:textSize="12sp"
+                    tools:text="5 hari lalu" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_close"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:background="@drawable/close_icon"
+                android:backgroundTint="@color/green"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+            <LinearLayout
+                android:background="@color/light_grey"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:paddingBottom="@dimen/margin_buttom"
+                    android:id="@+id/ll_content"
+                    android:background="@color/white"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:background="@drawable/placeholder"
+                        android:maxHeight="400dp"
+                        android:visibility="gone"
+                        tools:visibility="visible"
+                        android:id="@+id/img_header_post"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:adjustViewBounds="true"
+                        android:src="@drawable/placeholder" />
+
+
+                    <LinearLayout
+                        android:id="@+id/ll_title"
+                        android:layout_marginStart="@dimen/margin_start_end"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="@dimen/margin_start_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:layout_marginTop="5dp"
+                            android:layout_gravity="top"
+                            android:visibility="visible"
+                            android:id="@+id/icon_verified"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp"
+                            android:layout_marginEnd="5dp"
+                            android:src="@drawable/icon_verify2"
+                            />
+                        <TextView
+                            android:id="@+id/tv_post_title"
+                            style="@style/Header"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:textAlignment="textStart"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            tools:text="Cara Agar Tanah Subur" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_content_post"
+                        style="@style/TitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_start_end"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="@dimen/margin_start_end"
+                        android:lineSpacingExtra="10sp"
+                        android:textAlignment="textStart"
+                        tools:text="Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. " />
+
+                   <TextView
+                       android:id="@+id/tv_label_topic"
+                       android:textStyle="bold"
+                       android:text="@string/topik"
+                       style="@style/SubSubHeader"
+                       android:layout_marginStart="@dimen/margin_start_end"
+                       android:layout_marginTop="15dp"
+                       android:layout_marginBottom="8dp"
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_topic"
+                        android:layout_width="match_parent"
+                        android:layout_marginEnd="@dimen/margin_start_end"
+                        android:layout_marginStart="@dimen/margin_start_end"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="20dp"/>
+                <LinearLayout
+                    android:id="@+id/ll_komentar"
+                    android:background="@color/white"
+                    android:layout_width="match_parent"
+                    android:orientation="vertical"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_marginTop="20dp"
+                        android:layout_marginStart="20dp"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:text="@string/label_komentar"
+                        style="@style/SubSubHeader"
+                        android:layout_height="wrap_content"/>
+                    <androidx.recyclerview.widget.RecyclerView
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_comment_forum"
+                        android:id="@+id/rv_komentar"
+                        android:layout_width="match_parent"
+                        android:layout_marginTop="8dp"
+                        android:layout_height="wrap_content"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:padding="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:visibility="gone"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:layout_marginRight="6dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <CheckBox
+                    android:gravity="center_horizontal"
+                    android:id="@+id/cb_like"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/selector_like"
+                    android:button="@android:color/transparent"
+                    android:checked="true" />
+                <TextView
+                    android:id="@+id/tv_like_count"
+                    style="@style/SubTitleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/green"
+                    android:maxLines="1"
+                    android:text="2000" />
+            </LinearLayout>
+
+            <EditText
+                android:maxLines="5"
+                android:textAlignment="textStart"
+                style="@style/TextStyle"
+                android:id="@+id/et_komentar"
+                android:padding="15dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="Komentar"
+                android:background="@drawable/bg_edit_text_outlined"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_marginStart="4dp"
+                android:layout_gravity="center_vertical"
+                android:button="@android:color/transparent"
+                android:id="@+id/btn_send"
+                android:background="@drawable/selector_btn_send"
+                android:layout_width="25dp"
+                android:layout_height="25dp"/>
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+    <ProgressBar
+        android:id="@+id/pb_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
