@@ -26,4 +26,8 @@ class ForumRepository @Inject constructor(
     override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = firebaseDataSource.getBestComment(idComment)
     override suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> = firebaseDataSource.sendComment(comment)
     override suspend fun uploadThread(data: ForumPost,file: Uri?): Flow<Resource<String>> = firebaseDataSource.uploadThread(data,file)
+    override fun verifyForumPost(
+        forumPost: ForumPost,
+        verify: String?
+    ): Flow<Resource<Pair<String?, String?>>> = firebaseDataSource.verifyForumPost(forumPost, verify)
 }

@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.example.eFarm.R
 import com.example.eFarm.databinding.ItemForumPostBinding
 import com.example.efarm.core.data.source.remote.model.ForumPost
+import com.example.efarm.core.util.MIN_VERIFIED_POST
 import com.example.efarm.core.util.TextFormater
 import com.google.firebase.auth.FirebaseAuth
 
@@ -27,14 +28,15 @@ class PagingForumAdapter(
     private val viewModel: ForumViewModel,
     private val activity: HomeForumActivity
 ) : PagingDataAdapter<ForumPost, PagingForumAdapter.ForumVH>(Companion) {
-    private val uid = FirebaseAuth.getInstance().currentUser?.uid
-
+//    private val uid = FirebaseAuth.getInstance().currentUser?.uid
+    private val uid = viewModel.currentUser?.uid
+    private var likes = 0
     inner class ForumVH(private val binding: ItemForumPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(post: ForumPost) {
-            Log.d("like", "adp "+post.likes.toString())
+//            Log.d("like", "adp "+post.likes.toString())
             binding.tvPostTitle.text = post.title
             binding.tvPostContent.text = post.content
             binding.tvLikeCount.text = TextFormater.formatLikeCounts(post.likes?.size?:0)
@@ -54,7 +56,10 @@ class PagingForumAdapter(
 
 
             binding.iconVerified.visibility= if (post.verified!=null) View.VISIBLE else View.GONE
-
+            post.likes?.size?.let {
+                likes=it
+            }
+            Log.d("like",likes.toString())
 
             val isLiked=post.likes?.let { it.contains(uid) }?:false
             if (post.likes != null && uid != null) {
@@ -74,6 +79,11 @@ class PagingForumAdapter(
                             playSequentially(show, disappear)
                             start()
                         }
+//                        if(likes>= MIN_VERIFIED_POST&&post.verified==null){
+//                            Log.d("like",likes.toString())
+//                            binding.iconVerified.visibility = View.VISIBLE
+//                            //TODO update verivied status
+//                        }
                     } else {
                         //post.likes?.remove(uid)
                     }
@@ -87,7 +97,6 @@ class PagingForumAdapter(
                 doubleClick +=1
                 Handler(Looper.getMainLooper()).postDelayed(
                     {
-                        Log.d("TAG",doubleClick.toString())
                         if(doubleClick==2){
                             if (!isLiked) doLike(Unit)
                             doubleClick =0

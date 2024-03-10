@@ -31,4 +31,6 @@ interface IForumRepository {
     suspend fun sendComment(comment:CommentForumPost):Flow<Resource<String>>
 
     suspend fun uploadThread(data:ForumPost,file: Uri?):Flow<Resource<String>>
+
+    fun verifyForumPost(forumPost: ForumPost,verify:String?): Flow<Resource<Pair<String?, String?>>>
 }

@@ -39,4 +39,7 @@
     <string name="ya">Ya</string>
     <string name="ketik_sesuatu">Ketik sesuatu</string>
     <string name="chat_bot">Chat bot</string>
+    <string name="error_getting_respon">Error mendapatkan respon</string>
+    <string name="hello_im_chatbot_nwhat_can_i_help_you">hello im chatbot, \nwhat can i help you?</string>
+    <string name="initial_chat">Selamat datang di chatbot. Ada yang ingin ditanyakan?</string>
 </resources>

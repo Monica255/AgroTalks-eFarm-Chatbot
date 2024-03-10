@@ -28,5 +28,9 @@ class ForumInteractor @Inject constructor(
     override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = repo.getBestComment(idComment)
     override suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> = repo.sendComment(comment)
     override suspend fun uploadThread(data: ForumPost,file: Uri?): Flow<Resource<String>> = repo.uploadThread(data,file)
+    override fun verifyForumPost(
+        forumPost: ForumPost,
+        verify: String?
+    ): Flow<Resource<Pair<String?, String?>>> = repo.verifyForumPost(forumPost, verify)
 
 }

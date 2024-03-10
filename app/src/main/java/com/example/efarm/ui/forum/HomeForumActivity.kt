@@ -22,6 +22,7 @@ import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
+import com.example.efarm.core.util.MIN_VERIFIED_POST
 import com.example.efarm.core.util.ViewEventsForumPost
 import com.example.efarm.ui.forum.chatbot.ChatActivity
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
@@ -51,26 +52,46 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
     private val onCheckChanged: ((ForumPost) -> Unit) = { post ->
         tempPost=post
-        Log.d("like","occ "+post.likes.toString())
         viewModel.likeForumPost(post).observe(this){
             when(it){
                 is Resource.Success->{
                     it.data?.let {
-                        Log.d("like", it.first.toString())
-                        if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Edit(tempPost!!,it.first));tempPost=null
+                        if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Edit(tempPost!!,it.first))
+                        var likes = post.likes?.size?:0
+                        if (it.first) likes+=1 else likes-=1
+
+                        if(likes>= MIN_VERIFIED_POST&&post.verified==null){
+                            viewModel.verifyForumPost(post,"content").observe(this@HomeForumActivity){
+                                when(it){
+                                    is Resource.Success->{
+                                        viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
+                                    }
+                                    is Resource.Error->{}
+                                    is Resource.Loading->{}
+                                }
+                            }
+                        }else if (likes<= MIN_VERIFIED_POST&&post.verified!=null){
+                            viewModel.verifyForumPost(post,null).observe(this@HomeForumActivity){
+                                when(it){
+                                    is Resource.Success->{
+                                        viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
+                                    }
+                                    is Resource.Error->{}
+                                    is Resource.Loading->{}
+                                }
+                            }
+                        }
+                        else tempPost==null
                     }
                 }
                 is Resource.Error->{
-                    Log.d("like", it.message.toString())
                     Toast.makeText(binding.root.context, it.message.toString(),Toast.LENGTH_SHORT).show()
                     tempPost?.let { it ->
                         viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
                         tempPost=null
                     }
                 }
-                else -> {
-                    Log.d("like", "else")
-                }
+                is Resource.Loading->{}
             }
         }
     }
@@ -89,7 +110,6 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         binding = ActivityHomeForumBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setActionBar()
-
 
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost
@@ -150,7 +170,6 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     is Resource.Success -> {
                         if(it.data==null||it.data.isEmpty()){
                             Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
-                            Log.d("TAG","common null")
                         }
 
                         it.data?.toMutableList()?.let { it1 ->

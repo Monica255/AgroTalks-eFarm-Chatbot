@@ -13,6 +13,7 @@ import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.domain.usecase.AuthUseCase
 import com.example.efarm.core.domain.usecase.ForumUseCase
 import com.example.efarm.core.util.KategoriTopik
+import com.example.efarm.core.util.MIN_VERIFIED_POST
 import com.example.efarm.core.util.ViewEventsForumPost
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -80,12 +81,10 @@ class ForumViewModel @Inject constructor(
                     .filter { ViewEvents.entity.id_forum_post != it.id_forum_post }
             }
             is ViewEventsForumPost.Edit -> {
-//                Log.d("like",ViewEvents.entity.likes.toString())
                 paging
                     .map {
-                        if (ViewEvents.entity.id_forum_post == it.id_forum_post) return@map it.copy(
-//                            like_count = if (ViewEvents.isLiked) it.like_count + 1 else it.like_count - 1,
-                            likes = if (currentUser != null) {
+                        if (ViewEvents.entity.id_forum_post == it.id_forum_post){
+                            val likes = if (currentUser != null) {
                                 var list = mutableListOf<String>()
                                 it.likes?.let { it1 -> list.addAll(it1) }
                                 if(ViewEvents.isLiked){
@@ -93,7 +92,25 @@ class ForumViewModel @Inject constructor(
                                 }else list.remove(currentUser.uid)
                                 list
                             } else it.likes
-                        )
+
+                            val x = likes?.size ?: 0
+                            return@map it.copy(
+                                likes = likes,
+//                                verified = if(it.verified==null&&x>= MIN_VERIFIED_POST) "content" else null
+                            )
+                        }
+                        else return@map it
+                    }
+            }
+            is ViewEventsForumPost.Edit2 -> {
+                paging
+                    .map {
+                        if (ViewEvents.entity.id_forum_post == it.id_forum_post){
+                            var x = it.likes?.size?:0
+                            return@map it.copy(
+                                verified = if(it.verified==null&&x>= MIN_VERIFIED_POST) "content" else null
+                            )
+                        }
                         else return@map it
                     }
             }
@@ -105,4 +122,6 @@ class ForumViewModel @Inject constructor(
             }
         }
     }
+
+    fun verifyForumPost(forumPost: ForumPost,verify:String?) = forumUseCase.verifyForumPost(forumPost, verify).asLiveData()
 }

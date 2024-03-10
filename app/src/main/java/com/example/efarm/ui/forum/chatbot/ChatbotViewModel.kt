@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.Chat
+import com.example.efarm.core.data.source.remote.model.ChatBot
 import com.example.efarm.core.domain.usecase.AuthUseCase
 import com.example.efarm.core.domain.usecase.ChatbotUseCase
 import com.example.efarm.core.domain.usecase.ForumUseCase
@@ -19,4 +20,5 @@ class ChatbotViewModel @Inject constructor(
     suspend fun sendChat(data: Chat) = chatbotUseCase.sendChat(data)
     fun getChats() = chatbotUseCase.getChats()
     suspend fun getResponseChatbot(msg: String) = chatbotUseCase.getResponseChatbot(msg).asLiveData()
+    suspend fun getThreadChatbot(text: String) = chatbotUseCase.getThreadChatbot(text).asLiveData()
 }

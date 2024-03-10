@@ -59,6 +59,34 @@ class FirebaseDataSource @Inject constructor(
     private val chatsRef = firebaseDatabase.reference.child("chats/")
     private val commentRef = firebaseFirestore.collection("forum_comments")
 
+    fun verifyForumPost(forumPost: ForumPost,verify:String?): Flow<Resource<Pair<String?, String?>>> {
+        return flow {
+            try {
+                val result = suspendCancellableCoroutine<Boolean> { continuation ->
+                    forumRef.document(forumPost.id_forum_post).update("verified", verify)
+                        .addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                continuation.resume(true)
+                            } else {
+                                continuation.resume(false)
+                            }
+                        }
+                }
+
+                val successMsg = Pair(
+                    verify,
+                    currentUser?.uid
+                )
+
+                emit(Resource.Success(successMsg))
+            } catch (e: Exception) {
+                val errorMsg = "Gagal melakukan verifikasi"
+                emit(Resource.Error(errorMsg))
+            }
+        }
+    }
+
+
     fun getChats(): MutableLiveData<List<Chat>?> {
         val chats = MutableLiveData<List<Chat>?>()
         val x = currentUser?.uid
@@ -103,10 +131,20 @@ class FirebaseDataSource @Inject constructor(
         val x = currentUser?.uid
         val data2 = Chat(key, data.actor, data.message, data.timestamp)
 
-        x?.let {
-            chatsRef.child(it).child(key!!).setValue(data2).addOnCompleteListener {
+        x?.let {id->
+            chatsRef.child(id).child(key!!).setValue(data2).addOnCompleteListener {
                 if(it.isSuccessful){
-                    chat.value = Resource.Success("Berhasil mengirim data")
+                    if(data.thread!=null){
+                        chatsRef.child(id).child(key).child("thread").setValue(data.thread).addOnCompleteListener{
+                            if(it.isSuccessful){
+                                chat.value = Resource.Success("Berhasil mengirim data")
+                            }else{
+                                chat.value = Resource.Error("gagal mengirim data")
+                            }
+                        }
+                    }else{
+                        chat.value = Resource.Success("Berhasil mengirim data")
+                    }
                 }else{
                     chat.value = Resource.Error("gagal mengirim data")
                 }
@@ -450,8 +488,6 @@ class FirebaseDataSource @Inject constructor(
 
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
-//            emit(Resource.Loading())
-
             val favorite: Boolean
             val list = forumPost.likes ?: mutableListOf()
             val s: FieldValue = if (isContainUid(list)) {
@@ -467,12 +503,8 @@ class FirebaseDataSource @Inject constructor(
                     forumRef.document(forumPost.id_forum_post).update("likes", s)
                         .addOnCompleteListener {
                             if (it.isSuccessful) {
-                                Log.d("like", "like successful")
-//                                forumRef.document(forumPost.id_forum_post)
-//                                    .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
                                 continuation.resume(true)
                             } else {
-                                Log.d("like", "like failed")
                                 continuation.resume(false)
                             }
                         }

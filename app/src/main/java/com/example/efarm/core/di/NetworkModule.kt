@@ -24,10 +24,31 @@ class NetworkModule {
             .build()
     }
 
+    //
+//    @Provides
+//    fun provideApiService(client: OkHttpClient): ApiService {
+//        val retrofit = Retrofit.Builder()
+//            .baseUrl("https://generativelanguage.googleapis.com/")
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .client(client)
+//            .build()
+//        return retrofit.create(ApiService::class.java)
+//    }
     @Provides
-    fun provideApiService(client: OkHttpClient): ApiService {
+    @DefaultBaseUrl
+    fun provideDefaultApiService(client: OkHttpClient): ApiService {
+        return createApiService(client, "https://generativelanguage.googleapis.com/")
+    }
+
+    @Provides
+    @CustomBaseUrl
+    fun provideCustomApiService(client: OkHttpClient): ApiService {
+        return createApiService(client, "http://192.168.8.164:4000/")
+    }
+
+    private fun createApiService(client: OkHttpClient, baseUrl: String): ApiService {
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://generativelanguage.googleapis.com/")
+            .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

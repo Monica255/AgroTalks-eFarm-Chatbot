@@ -4,5 +4,8 @@ data class Chat(
     val id: String?=null,
     val actor:String="bot",
     val message: String="",
-    val timestamp: Long=0
+    val timestamp: Long=0,
+    val thread: ChatBot?=null
 )
+
+

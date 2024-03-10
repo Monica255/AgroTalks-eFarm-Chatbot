@@ -9,8 +9,9 @@ import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.eFarm.databinding.ItemBubbleChatBinding
 import com.example.efarm.core.data.source.remote.model.Chat
+import com.example.efarm.core.data.source.remote.model.ForumPost
 
-class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ItemViewHolder>() {
+class ChatAdapter(private val onClick: ((String) -> Unit)): RecyclerView.Adapter<ChatAdapter.ItemViewHolder>() {
 
     var list= mutableListOf<Chat>()
 
@@ -32,6 +33,9 @@ class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ItemViewHolder>() {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(chat: Chat) {
+            chat.thread?.let {
+                binding.itemChatBot.setOnThreadClickListener(onClick)
+            }
             binding.itemChatBot.setData(chat)
         }
     }
