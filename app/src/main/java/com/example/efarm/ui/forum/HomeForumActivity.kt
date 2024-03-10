@@ -61,38 +61,39 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         if (it.first) likes+=1 else likes-=1
 
                         if(likes>= MIN_VERIFIED_POST&&post.verified==null){
-                            viewModel.verifyForumPost(post,"content").observe(this@HomeForumActivity){
-                                when(it){
-                                    is Resource.Success->{
-                                        viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
-                                    }
-                                    is Resource.Error->{}
-                                    is Resource.Loading->{}
-                                }
-                            }
+                            verified(post,"content")
                         }else if (likes<= MIN_VERIFIED_POST&&post.verified!=null){
-                            viewModel.verifyForumPost(post,null).observe(this@HomeForumActivity){
-                                when(it){
-                                    is Resource.Success->{
-                                        viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
-                                    }
-                                    is Resource.Error->{}
-                                    is Resource.Loading->{}
-                                }
-                            }
-                        }
-                        else tempPost==null
+                            verified(post,null)
+                        } else tempPost==null
                     }
                 }
                 is Resource.Error->{
-                    Toast.makeText(binding.root.context, it.message.toString(),Toast.LENGTH_SHORT).show()
-                    tempPost?.let { it ->
-                        viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
-                        tempPost=null
-                    }
+                    showError(it.message.toString())
                 }
                 is Resource.Loading->{}
             }
+        }
+    }
+
+    private fun verified(post:ForumPost,verified:String?){
+        viewModel.verifyForumPost(post,verified).observe(this@HomeForumActivity){
+            when(it){
+                is Resource.Success->{
+                    viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
+                }
+                is Resource.Error->{
+                    showError(it.message.toString())
+                }
+                is Resource.Loading->{}
+            }
+        }
+    }
+
+    private fun showError(msg:String){
+        Toast.makeText(binding.root.context, msg,Toast.LENGTH_SHORT).show()
+        tempPost?.let { it ->
+            viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
+            tempPost=null
         }
     }
 
@@ -169,7 +170,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     is Resource.Loading -> {}
                     is Resource.Success -> {
                         if(it.data==null||it.data.isEmpty()){
-                            Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@HomeForumActivity, "Gagal mendapatkan topik",Toast.LENGTH_SHORT).show()
                         }
 
                         it.data?.toMutableList()?.let { it1 ->
@@ -180,7 +181,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         }
                     }
                     is Resource.Error -> {
-                        Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@HomeForumActivity, "Gagal mendapatkan topik",Toast.LENGTH_SHORT).show()
                     }
                 }
             }
