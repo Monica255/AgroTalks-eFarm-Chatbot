@@ -2,6 +2,7 @@ package com.example.efarm.ui.forum.chatbot
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -13,7 +14,10 @@ import com.example.eFarm.databinding.ActivityChatBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.Chat
 import com.example.efarm.core.util.ChatActor
+import com.example.efarm.core.util.END_IDX
 import com.example.efarm.core.util.FORUM_POST_ID
+import com.example.efarm.core.util.NUM_WORDS
+import com.example.efarm.core.util.START_IDX
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -24,9 +28,20 @@ class ChatActivity : AppCompatActivity() {
     private val viewModel: ChatbotViewModel by viewModels()
 
 
-    private val onCLick: ((String) -> Unit) = { post ->
+    private val onCLick: ((String,String) -> Unit) = { postid, post->
+//        var start :Int?= null
+//        var end :Int?= null
+//        val data = post.split("||")
+//        try {
+//            start=data[0].toInt()
+//            end=data[1].toInt()
+//        }catch (e:Exception){
+//            Log.d("detail","No index")
+//        }
         val intent = Intent(this, DetailForumPostActivity::class.java)
-        intent.putExtra(FORUM_POST_ID, post)
+        intent.putExtra(FORUM_POST_ID, postid)
+        intent.putExtra(START_IDX, post)
+//        intent.putExtra(END_IDX, end)
         startActivity(intent)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,82 +63,19 @@ class ChatActivity : AppCompatActivity() {
                     val chat=Chat(null,ChatActor.USER.printable,msg,System.currentTimeMillis())
                     viewModel.sendChat(chat).observe(this@ChatActivity) { it ->
                         binding.etInputChat.setText("")
-                        if (msg.trim()[0]== '/'){
-                            lifecycleScope.launch {
-                                viewModel.getThreadChatbot(msg).observe(this@ChatActivity){
-                                    when(it){
-                                        is Resource.Loading -> {
-                                            binding.loading.visibility= View.VISIBLE
-                                        }
-                                        is Resource.Error ->{
-                                            binding.btnSend.isClickable=true
-                                            binding.etInputChat.isEnabled = true
-                                            binding.loading.visibility= View.GONE
-                                            Toast.makeText(this@ChatActivity,
-                                                getString(R.string.error_getting_respon),Toast.LENGTH_SHORT).show()
-                                        }
-                                        is Resource.Success ->{
-                                            binding.btnSend.isClickable=true
-                                            binding.etInputChat.isEnabled = true
-                                            binding.loading.visibility= View.GONE
-                                            it.data?.let {chatbot->
-                                                chatbot.thread?.let{
-                                                    val chat=Chat(null,ChatActor.BOT.printable,chatbot.thread,System.currentTimeMillis(),chatbot)
-                                                    sendChat(chat)
-                                                }
-
-                                            }
-
-                                        }
-                                    }
-                                }
+                        when (it) {
+                            is Resource.Success -> {
+                                getThreadChatbot(msg)
                             }
-                        }else{
-                            when (it) {
-                                is Resource.Success -> {
-                                    lifecycleScope.launch {
-                                        viewModel.getResponseChatbot(msg).observe(this@ChatActivity){
-                                            when(it){
-                                                is Resource.Success->{
-                                                    binding.btnSend.isClickable=true
-                                                    binding.etInputChat.isEnabled = true
-                                                    binding.loading.visibility= View.GONE
 
-                                                    it.data?.let {
-                                                        val chat=Chat(null,ChatActor.BOT.printable,it.candidates[0].content.parts[0].text,System.currentTimeMillis())
-                                                        sendChat(chat)
-                                                    }
-                                                }
-                                                is Resource.Loading->{
-                                                    binding.loading.visibility= View.VISIBLE
-                                                }
-                                                is Resource.Error->{
-                                                    binding.btnSend.isClickable=true
-                                                    binding.etInputChat.isEnabled = true
-                                                    binding.loading.visibility= View.GONE
-                                                    Toast.makeText(this@ChatActivity,
-                                                        getString(R.string.error_getting_respon),Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
+                            is Resource.Error -> {
+                                binding.btnSend.isClickable=true
+                            }
 
-                                    }
-                                }
-
-                                is Resource.Error -> {
-                                    binding.btnSend.isClickable=true
-                                }
-
-                                is Resource.Loading -> {
-                                    binding.btnSend.isClickable=false
-                                }
-
-                                else -> {
-                                    binding.btnSend.isClickable=false
-                                }
+                            is Resource.Loading -> {
+                                binding.btnSend.isClickable=false
                             }
                         }
-
                     }
                 }
 
@@ -156,21 +108,110 @@ class ChatActivity : AppCompatActivity() {
         sendChat(initialChat)
     }
 
+    private fun getThreadChatbot(msg:String){
+        lifecycleScope.launch {
+            viewModel.getThreadChatbot(msg).observe(this@ChatActivity){
+                when(it){
+                    is Resource.Loading -> {
+                        showLoading(true)
+                    }
+                    is Resource.Error ->{
+                        showLoading(false)
+//                        it.message?.let{
+//                            Toast.makeText(this@ChatActivity,
+//                              it,Toast.LENGTH_SHORT).show()
+//                        }
+                        getResponseChatbot(msg)
+                    }
+                    is Resource.Success ->{
+                        it.data?.let {chatbot->
+                            if(chatbot.thread==null) showLoading(false)
+                            chatbot.thread?.let{thread->
+                                lifecycleScope.launch {
+                                    viewModel.getResponseChatbot(makePromt(msg,thread)).observe(this@ChatActivity){
+                                        when(it){
+                                            is Resource.Success->{
+                                                showLoading(false)
+
+                                                it.data?.let {
+                                                    val chat=Chat(null,ChatActor.BOT.printable,it.candidates[0].content.parts[0].text,System.currentTimeMillis(),chatbot)
+                                                    sendChat(chat)
+                                                }
+                                            }
+                                            is Resource.Loading->{
+                                                showLoading(true)
+                                            }
+                                            is Resource.Error->{
+                                                showLoading(false)
+                                                Toast.makeText(this@ChatActivity,
+                                                    getString(R.string.error_getting_respon),Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                }
+//                                val chat=Chat(null,ChatActor.BOT.printable,thread,System.currentTimeMillis(),chatbot)
+//                                sendChat(chat)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun makePromt(questions:String,context:String): String {
+        return """Give me the answer for this question \"${questions}\" from this context bellow using Indonesia language with maximum $NUM_WORDS words!
+            
+            $context
+            
+            if you cannot find the answer in the context, just summerize the context back as a response with maximum $NUM_WORDS words in bahasa indonesia!
+        """.trimMargin()
+    }
+
+    private fun getResponseChatbot(msg: String){
+        lifecycleScope.launch {
+            viewModel.getResponseChatbot(msg).observe(this@ChatActivity){
+                when(it){
+                    is Resource.Success->{
+                        showLoading(false)
+                        it.data?.let {
+                            val chat=Chat(null,ChatActor.BOT.printable,it.candidates[0].content.parts[0].text,System.currentTimeMillis())
+                            sendChat(chat)
+                        }
+                    }
+                    is Resource.Loading->{
+                        showLoading(true)
+                    }
+                    is Resource.Error->{
+                        showLoading(false)
+                        Toast.makeText(this@ChatActivity,
+                            getString(R.string.error_getting_respon),Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+        }
+    }
+
+    private fun showLoading(isLoading:Boolean){
+        binding.btnSend.isClickable=!isLoading
+        binding.etInputChat.isEnabled = !isLoading
+        binding.loading.visibility= if(isLoading) View.VISIBLE else View.GONE
+    }
     private fun sendChat(data:Chat){
         lifecycleScope.launch {
             viewModel.sendChat(data).observe(this@ChatActivity) {
                 when (it) {
                     is Resource.Success -> {
-                        binding.etInputChat.isEnabled = true
-                        binding.loading.visibility= View.GONE
+                        showLoading(false)
                     }
 
                     is Resource.Error -> {
-                        binding.loading.visibility= View.GONE
+                        showLoading(false)
                     }
 
                     is Resource.Loading -> {
-                        binding.loading.visibility= View.VISIBLE
+                        showLoading(true)
                     }
                 }
             }

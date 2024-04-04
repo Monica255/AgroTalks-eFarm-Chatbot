@@ -11,7 +11,8 @@ data class ForumPost(
     var likes:MutableList<String>?= null,
     var comments:MutableList<String>?=null,
     var topics:List<String>?=null,
-    var verified:String?=null
+    var verified:String?=null,
+    var link:String?=null
 )
 
 data class CommentForumPost(
@@ -20,6 +21,8 @@ data class CommentForumPost(
     var content:String="",
     var user_id:String="",
     var timestamp: Long=0,
+    var upvotes:MutableList<String>?=null,
+    var downvotes:MutableList<String>?=null
 )
 
 data class Topic(

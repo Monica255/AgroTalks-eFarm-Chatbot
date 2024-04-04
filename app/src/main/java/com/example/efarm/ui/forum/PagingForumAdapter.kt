@@ -28,22 +28,18 @@ class PagingForumAdapter(
     private val viewModel: ForumViewModel,
     private val activity: HomeForumActivity
 ) : PagingDataAdapter<ForumPost, PagingForumAdapter.ForumVH>(Companion) {
-//    private val uid = FirebaseAuth.getInstance().currentUser?.uid
-    private val uid = viewModel.currentUser?.uid
+    private val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     private var likes = 0
     inner class ForumVH(private val binding: ItemForumPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
-
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(post: ForumPost) {
-//            Log.d("like", "adp "+post.likes.toString())
             binding.tvPostTitle.text = post.title
             binding.tvPostContent.text = post.content
             binding.tvLikeCount.text = TextFormater.formatLikeCounts(post.likes?.size?:0)
             binding.tvTimestamp.text = TextFormater.toPostTime(post.timestamp, binding.root.context)
             binding.tvKomentar.text =
                 binding.root.context.getString(R.string.komentar, post.comments?.size ?: 0)
-
             viewModel.getUserdata(post.user_id).observe(activity) {it ->
                 it?.let {
                     binding.tvUserName.text = it.name
@@ -54,12 +50,10 @@ class PagingForumAdapter(
                 }
             }
 
-
             binding.iconVerified.visibility= if (post.verified!=null) View.VISIBLE else View.GONE
             post.likes?.size?.let {
                 likes=it
             }
-            Log.d("like",likes.toString())
 
             val isLiked=post.likes?.let { it.contains(uid) }?:false
             if (post.likes != null && uid != null) {
@@ -79,11 +73,6 @@ class PagingForumAdapter(
                             playSequentially(show, disappear)
                             start()
                         }
-//                        if(likes>= MIN_VERIFIED_POST&&post.verified==null){
-//                            Log.d("like",likes.toString())
-//                            binding.iconVerified.visibility = View.VISIBLE
-//                            //TODO update verivied status
-//                        }
                     } else {
                         //post.likes?.remove(uid)
                     }
@@ -125,7 +114,6 @@ class PagingForumAdapter(
             }
         }
     }
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ForumVH, position: Int) {
         val data = getItem(position)
@@ -133,23 +121,18 @@ class PagingForumAdapter(
             holder.bind(data)
         }
     }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ForumVH {
         val binding =
             ItemForumPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ForumVH(binding)
     }
-
     companion object : DiffUtil.ItemCallback<ForumPost>() {
         override fun areItemsTheSame(oldItem: ForumPost, newItem: ForumPost): Boolean {
             return oldItem.id_forum_post == newItem.id_forum_post
         }
-
         override fun areContentsTheSame(oldItem: ForumPost, newItem: ForumPost): Boolean {
             return oldItem == newItem
         }
-
         override fun getChangePayload(oldItem: ForumPost, newItem: ForumPost): Any? = Any()
     }
-
 }

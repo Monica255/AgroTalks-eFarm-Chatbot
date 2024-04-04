@@ -20,6 +20,7 @@ import com.example.eFarm.databinding.ActivityHomeForumBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
+import com.example.efarm.core.util.ADMIN_ID
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.MIN_VERIFIED_POST
@@ -28,6 +29,7 @@ import com.example.efarm.ui.forum.chatbot.ChatActivity
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
 import com.example.efarm.ui.forum.upload.MakePostActivity
 import com.example.efarm.ui.loginsignup.LoginSignupActivity
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -42,7 +44,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
     private lateinit var adapterForum: PagingForumAdapter
     private val viewModel: ForumViewModel by viewModels()
     private var tempPost:ForumPost?=null
-
+    private var goToDetail=false
     private val onCLick: ((ForumPost) -> Unit) = { post ->
         val intent = Intent(this, DetailForumPostActivity::class.java)
         intent.putExtra(FORUM_POST_ID, post.id_forum_post)
@@ -59,12 +61,17 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Edit(tempPost!!,it.first))
                         var likes = post.likes?.size?:0
                         if (it.first) likes+=1 else likes-=1
+                        Log.d("TAG",likes.toString())
+                        Log.d("TAG",post.verified.toString())
+                        Log.d("TAG",post.user_id.toString())
+                        if(post.user_id!= ADMIN_ID){
+                            if(likes>= MIN_VERIFIED_POST&&post.verified==null){
+                                verified(post,"content")
+                            }else if (likes<= MIN_VERIFIED_POST&&post.verified!=null){
+                                verified(post,null)
+                            } else tempPost==null
+                        }else tempPost==null
 
-                        if(likes>= MIN_VERIFIED_POST&&post.verified==null){
-                            verified(post,"content")
-                        }else if (likes<= MIN_VERIFIED_POST&&post.verified!=null){
-                            verified(post,null)
-                        } else tempPost==null
                     }
                 }
                 is Resource.Error->{
@@ -72,28 +79,6 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                 }
                 is Resource.Loading->{}
             }
-        }
-    }
-
-    private fun verified(post:ForumPost,verified:String?){
-        viewModel.verifyForumPost(post,verified).observe(this@HomeForumActivity){
-            when(it){
-                is Resource.Success->{
-                    viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
-                }
-                is Resource.Error->{
-                    showError(it.message.toString())
-                }
-                is Resource.Loading->{}
-            }
-        }
-    }
-
-    private fun showError(msg:String){
-        Toast.makeText(binding.root.context, msg,Toast.LENGTH_SHORT).show()
-        tempPost?.let { it ->
-            viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
-            tempPost=null
         }
     }
 
@@ -105,31 +90,21 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             viewModel.getData()
         }
     }
-    private var goToDetail=false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeForumBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setActionBar()
 
+//        lifecycleScope.launch {
+//            viewModel.prepopulate()
+//        }
+
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost
-
-
         adapterForum = PagingForumAdapter(onCLick,onCheckChanged,viewModel,this)
 
         binding.rvForumPost.adapter = adapterForum
-
-        binding.btnTopikPostForum.setOnClickListener {
-            val topicFragment= ForumTopicFragment()
-            topicFragment.show(supportFragmentManager,"topic_dialog")
-        }
-
-        lifecycleScope.launch {
-            adapterForum.loadStateFlow.collectLatest { loadStates ->
-                showLoading(loadStates.refresh is LoadState.Loading)
-            }
-        }
 
         viewModel.getData()
         viewModel.pagingData.observe(this) { it ->
@@ -139,6 +114,12 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     adapterForum.submitData(lifecycle, it)
                     binding.swipeRefresh.isRefreshing = false
                 }
+            }
+        }
+
+        lifecycleScope.launch {
+            adapterForum.loadStateFlow.collectLatest { loadStates ->
+                showLoading(loadStates.refresh is LoadState.Loading)
             }
         }
 
@@ -164,6 +145,11 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             startActivity(intent)
         }
 
+        binding.btnTopikPostForum.setOnClickListener {
+            val topicFragment= ForumTopicFragment()
+            topicFragment.show(supportFragmentManager,"topic_dialog")
+        }
+
         lifecycleScope.launch {
             viewModel.getListTopik(KategoriTopik.SEMUA).observe(this@HomeForumActivity) {
                 when (it) {
@@ -185,26 +171,6 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     }
                 }
             }
-
-//            viewModel.getListTopik(KategoriTopik.COMMODITY).observe(this@HomeForumActivity) {
-//                when (it) {
-//                    is Resource.Loading -> {
-//                        Log.d("TAG","Loading commodity")
-//                    }
-//                    is Resource.Success -> {
-//                        if(it.data==null||it.data.isEmpty()){
-//                            Log.d("TAG","commodity nul")
-//                        }
-//                        it.data?.toMutableList()?.let { it1 ->
-//                            viewModel.topicsCommodity.value=it1
-//                        }
-//                    }
-//                    is Resource.Error -> {
-//                        Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//            }
-
         }
 
     }
@@ -229,13 +195,29 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         }
         builder.show()
     }
-
-
+    private fun verified(post:ForumPost,verified:String?){
+        viewModel.verifyForumPost(post,verified).observe(this@HomeForumActivity){
+            when(it){
+                is Resource.Success->{
+                    viewModel.onViewEvent(ViewEventsForumPost.Edit2(tempPost!!));tempPost=null
+                }
+                is Resource.Error->{
+                    showError(it.message.toString())
+                }
+                is Resource.Loading->{}
+            }
+        }
+    }
     private fun showLoading(isShowLoading: Boolean) {
         binding.pbLoading.visibility = if (isShowLoading) View.VISIBLE else View.GONE
     }
-
-
+    private fun showError(msg:String){
+        Toast.makeText(binding.root.context, msg,Toast.LENGTH_SHORT).show()
+        tempPost?.let { it ->
+            viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
+            tempPost=null
+        }
+    }
     private fun setActionBar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.title = ""

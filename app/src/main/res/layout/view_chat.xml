@@ -83,20 +83,36 @@
                             android:src="@drawable/placeholder" />
                     </androidx.cardview.widget.CardView>
 
-                    <TextView
-                        android:id="@+id/tv_title"
-                        style="@style/SubTitleText"
-                        android:textStyle="bold"
-                        android:textColor="@color/white"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                    <LinearLayout
+                        android:gravity="center"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="5dp"
-                        android:maxLines="2"
-                        android:text="Thread"
-                        android:textAlignment="textStart"
-                        tools:ignore="RtlCompat" />
+                        android:orientation="vertical"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:id="@+id/tv_title"
+                            style="@style/SubTitleText"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxLines="2"
+                            android:text="Thread"
+                            android:textAlignment="textStart"
+                            tools:ignore="RtlCompat" />
+                        <TextView
+                            android:id="@+id/tv_thread"
+                            style="@style/SmallText"
+                            android:textColor="@color/white"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxLines="2"
+                            android:text="Thread"
+                            android:textAlignment="textStart"
+                            tools:ignore="RtlCompat" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <TextView

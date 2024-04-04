@@ -7,6 +7,7 @@ import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.KategoriTopik
+import com.example.efarm.core.util.VoteType
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,8 @@ interface ForumUseCase {
     suspend fun uploadThread(data:ForumPost,file: Uri?):Flow<Resource<String>>
 
     fun verifyForumPost(forumPost: ForumPost,verify:String?): Flow<Resource<Pair<String?, String?>>>
+
+    fun voteComment(comment: CommentForumPost,voteType: VoteType): Flow<Resource<Pair<Boolean, String?>>>
+
+    suspend fun prepopulate()
 }

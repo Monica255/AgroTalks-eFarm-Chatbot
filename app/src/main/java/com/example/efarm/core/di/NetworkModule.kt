@@ -14,38 +14,24 @@ import java.util.concurrent.TimeUnit
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
-
     @Provides
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-            .connectTimeout(120, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
             .build()
     }
-
-    //
-//    @Provides
-//    fun provideApiService(client: OkHttpClient): ApiService {
-//        val retrofit = Retrofit.Builder()
-//            .baseUrl("https://generativelanguage.googleapis.com/")
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .client(client)
-//            .build()
-//        return retrofit.create(ApiService::class.java)
-//    }
     @Provides
     @DefaultBaseUrl
     fun provideDefaultApiService(client: OkHttpClient): ApiService {
         return createApiService(client, "https://generativelanguage.googleapis.com/")
     }
-
     @Provides
     @CustomBaseUrl
     fun provideCustomApiService(client: OkHttpClient): ApiService {
-        return createApiService(client, "http://192.168.8.164:4000/")
+        return createApiService(client, "http://192.168.170.164:4000/")
     }
-
     private fun createApiService(client: OkHttpClient, baseUrl: String): ApiService {
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)

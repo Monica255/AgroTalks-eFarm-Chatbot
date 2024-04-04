@@ -8,6 +8,7 @@ import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.domain.repository.IForumRepository
 import com.example.efarm.core.util.KategoriTopik
+import com.example.efarm.core.util.VoteType
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -32,5 +33,14 @@ class ForumInteractor @Inject constructor(
         forumPost: ForumPost,
         verify: String?
     ): Flow<Resource<Pair<String?, String?>>> = repo.verifyForumPost(forumPost, verify)
+
+    override fun voteComment(
+        comment: CommentForumPost,
+        voteType: VoteType
+    ): Flow<Resource<Pair<Boolean, String?>>> = repo.voteComment(comment, voteType)
+
+    override suspend fun prepopulate() {
+        repo.prepopulate()
+    }
 
 }

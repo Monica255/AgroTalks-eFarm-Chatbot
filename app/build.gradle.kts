@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.efarm"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
@@ -70,7 +70,7 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-
+    implementation ("androidx.fragment:fragment:1.3.6")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:30.0.0"))
@@ -79,13 +79,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx:24.1.1")
     implementation("com.google.firebase:firebase-storage-ktx")
 
-
     // Navigation Component
     implementation("androidx.navigation:navigation-fragment-ktx:2.3.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.3.5")
-
-    implementation ("androidx.fragment:fragment:1.3.6")
-
 
     // Image Loading Libraries
     implementation("de.hdodenhof:circleimageview:3.1.0")
@@ -126,4 +122,9 @@ dependencies {
 
     // Flexbox Layout
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+
+    //prepopulate data
+    api ("org.apache.poi:poi:5.2.5")
+    api ("org.apache.poi:poi-ooxml:5.2.5")
+
 }

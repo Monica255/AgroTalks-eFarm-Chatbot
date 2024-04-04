@@ -11,7 +11,7 @@ import com.example.eFarm.databinding.ItemBubbleChatBinding
 import com.example.efarm.core.data.source.remote.model.Chat
 import com.example.efarm.core.data.source.remote.model.ForumPost
 
-class ChatAdapter(private val onClick: ((String) -> Unit)): RecyclerView.Adapter<ChatAdapter.ItemViewHolder>() {
+class ChatAdapter(private val onClick: ((String,String) -> Unit)): RecyclerView.Adapter<ChatAdapter.ItemViewHolder>() {
 
     var list= mutableListOf<Chat>()
 

@@ -30,6 +30,7 @@ import com.example.eFarm.databinding.ActivityMakePostBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
+import com.example.efarm.core.util.ADMIN_ID
 import com.example.efarm.core.util.DateConverter
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.ui.forum.FilterTopicAdapter
@@ -37,6 +38,8 @@ import com.example.efarm.ui.forum.ForumTopicFragment
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.material.timepicker.TimeFormat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -55,7 +58,7 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
     private var title = ""
     private lateinit var adapterTopic: FilterTopicAdapter
     private val viewModel: MakePostViewModel by viewModels()
-    var uid: String? = null
+    var uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     private var getFile: File? = null
     private var filePath: Uri? = null
 
@@ -65,7 +68,6 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        uid = viewModel.currentUser?.uid
         binding = ActivityMakePostBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setActionBar()
@@ -129,36 +131,6 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
 
                     else -> {}
                 }
-//                lifecycleScope.launch {
-//                    viewModel.getListTopik(KategoriTopik.COMMODITY).observe(this@MakePostActivity) {
-//                        when (it) {
-//                            is Resource.Loading -> {
-//                                Log.d("TAG", "Loading commodity")
-//                            }
-//
-//                            is Resource.Success -> {
-//                                if (it.data == null || it.data.isEmpty()) {
-//                                    Log.d("TAG", "commodity nul")
-//
-////                            binding.tvLabelCommoditiesTopic.visibility=View.GONE
-//                                }
-//                                it.data?.toMutableList()?.let { it1 ->
-//                                    viewModel.topicsCommodity.value = it1
-//                                }
-//                            }
-//
-//                            is Resource.Error -> {
-//                                Toast.makeText(
-//                                    this@MakePostActivity,
-//                                    "Failed to get topics",
-//                                    Toast.LENGTH_SHORT
-//                                ).show()
-//                            }
-//
-//                            else -> {}
-//                        }
-//                    }
-//                }
             }
         }
     }
@@ -287,12 +259,12 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
                         DateConverter.getCurrentTimestamp(),
                         mutableListOf<String>(),
                         mutableListOf<String>(),
-                        viewModel.topics.value!!.map { t ->t.topic_id }
+                        viewModel.topics.value!!.map { t ->t.topic_id },
+                        verified = if(it== ADMIN_ID)"content" else null
                     )
                 }
 
                 data?.let{data->
-                    Log.d("photo",anyPhoto.toString()+" "+filePath)
                     lifecycleScope.launch {
                         viewModel.uploadThread(data,if(anyPhoto)filePath else null).observe(this@MakePostActivity){
                             when(it){

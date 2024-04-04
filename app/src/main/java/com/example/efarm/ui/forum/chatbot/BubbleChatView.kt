@@ -28,16 +28,17 @@ class BubbleChatView : RelativeLayout {
     private lateinit var tv_bot: TextView
     private lateinit var tv_user: TextView
     private lateinit var tv_title: TextView
+    private lateinit var tv_thread: TextView
     private lateinit var img_header: ImageView
     private val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    private var onThreadClickListener: ((String) -> Unit)? = null
+    private var onThreadClickListener: ((String,String) -> Unit)? = null
 
-    fun setOnThreadClickListener(listener: (String) -> Unit) {
+    fun setOnThreadClickListener(listener: (String, String) -> Unit) {
         onThreadClickListener = listener
         ll_thread.setOnClickListener {
-            val chatbotId = (ll_thread.tag as? String) ?: return@setOnClickListener
-            onThreadClickListener?.invoke(chatbotId)
+            val chatbot= (ll_thread.tag as? Pair<String,String>) ?: return@setOnClickListener
+            onThreadClickListener?.invoke(chatbot.first,chatbot.second)
         }
     }
 
@@ -73,6 +74,7 @@ class BubbleChatView : RelativeLayout {
         tv_bot = rootView.findViewById(R.id.tv_chatbot)
         tv_user = rootView.findViewById(R.id.tv_user)
         tv_title = rootView.findViewById(R.id.tv_title)
+        tv_thread = rootView.findViewById(R.id.tv_thread)
         img_header = rootView.findViewById(R.id.img_header)
 
     }
@@ -83,19 +85,20 @@ class BubbleChatView : RelativeLayout {
             ll_bot.visibility = View.GONE
             ll_user.visibility = View.VISIBLE
         } else {
+//            val data2 = data.message?.split("||")?: listOf()
             tv_bot.text = data.message
             ll_bot.visibility = View.VISIBLE
             ll_user.visibility = View.GONE
             ll_thread.visibility = if (data.thread != null) View.VISIBLE else View.GONE
             data.thread?.let { chatbot ->
                 if (chatbot.id != null && onThreadClickListener != null) {
-                    ll_thread.tag = chatbot.id
+                    ll_thread.tag = Pair(chatbot.id,data.message)
                 }
                 chatbot.confidence?.let {
                     tv_title.text = chatbot.title
+                    tv_thread.text = chatbot.thread
                     Glide.with(rootView.context).load(chatbot.img)
                         .placeholder(R.drawable.placeholder).into(img_header)
-
                 }
 
             }

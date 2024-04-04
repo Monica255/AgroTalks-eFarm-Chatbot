@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -70,61 +71,64 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.core.widget.NestedScrollView
-            android:layout_weight="1"
             android:layout_width="match_parent"
-            android:layout_height="0dp">
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
             <LinearLayout
-                android:background="@color/light_grey"
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:background="@color/light_grey"
+                android:orientation="vertical">
+
                 <LinearLayout
-                    android:paddingBottom="@dimen/margin_buttom"
                     android:id="@+id/ll_content"
-                    android:background="@color/white"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:background="@color/white"
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/margin_buttom">
 
                     <ImageView
-                        android:background="@drawable/placeholder"
-                        android:maxHeight="400dp"
-                        android:visibility="gone"
-                        tools:visibility="visible"
                         android:id="@+id/img_header_post"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:adjustViewBounds="true"
-                        android:src="@drawable/placeholder" />
+                        android:background="@drawable/placeholder"
+                        android:maxHeight="400dp"
+                        android:src="@drawable/placeholder"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
 
                     <LinearLayout
                         android:id="@+id/ll_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_start_end"
                         android:layout_marginTop="10dp"
-                        android:layout_marginEnd="@dimen/margin_start_end"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_marginEnd="@dimen/margin_start_end">
+
                         <ImageView
-                            android:layout_marginTop="5dp"
-                            android:layout_gravity="top"
-                            android:visibility="visible"
                             android:id="@+id/icon_verified"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
+                            android:layout_gravity="top"
+                            android:layout_marginTop="5dp"
                             android:layout_marginEnd="5dp"
                             android:src="@drawable/icon_verify2"
-                            />
+                            android:visibility="visible" />
+
                         <TextView
                             android:id="@+id/tv_post_title"
                             style="@style/Header"
-                            android:layout_weight="1"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="15dp"
+                            android:layout_weight="1"
+                            android:maxLines="2"
                             android:textAlignment="textStart"
                             android:textStyle="bold"
-                            android:maxLines="2"
                             tools:text="Cara Agar Tanah Subur" />
                     </LinearLayout>
 
@@ -140,112 +144,118 @@
                         android:textAlignment="textStart"
                         tools:text="Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. Forum post content here. " />
 
-                   <TextView
-                       android:id="@+id/tv_label_topic"
-                       android:textStyle="bold"
-                       android:text="@string/topik"
-                       style="@style/SubSubHeader"
-                       android:layout_marginStart="@dimen/margin_start_end"
-                       android:layout_marginTop="15dp"
-                       android:layout_marginBottom="8dp"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"/>
+                    <TextView
+                        android:id="@+id/tv_label_topic"
+                        style="@style/SubSubHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_start_end"
+                        android:layout_marginTop="15dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/topik"
+                        android:textStyle="bold" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_topic"
                         android:layout_width="match_parent"
-                        android:layout_marginEnd="@dimen/margin_start_end"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_start_end"
-                        android:layout_height="wrap_content"/>
+                        android:layout_marginEnd="@dimen/margin_start_end" />
                 </LinearLayout>
+
                 <Space
                     android:layout_width="0dp"
-                    android:layout_height="20dp"/>
+                    android:layout_height="20dp" />
+
                 <LinearLayout
                     android:id="@+id/ll_komentar"
-                    android:background="@color/white"
                     android:layout_width="match_parent"
-                    android:orientation="vertical"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:orientation="vertical">
+
                     <TextView
-                        android:layout_marginTop="20dp"
-                        android:layout_marginStart="20dp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:text="@string/label_komentar"
                         style="@style/SubSubHeader"
-                        android:layout_height="wrap_content"/>
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginTop="20dp"
+                        android:text="@string/label_komentar"
+                        android:textStyle="bold" />
+
                     <androidx.recyclerview.widget.RecyclerView
-                        tools:itemCount="3"
-                        tools:listitem="@layout/item_comment_forum"
                         android:id="@+id/rv_komentar"
                         android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:layout_height="wrap_content"/>
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_comment_forum" />
 
                 </LinearLayout>
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
+
         <LinearLayout
-            android:orientation="horizontal"
-            android:padding="6dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="6dp">
+
             <LinearLayout
-                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center_horizontal"
                 android:layout_marginTop="6dp"
                 android:layout_marginRight="6dp"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:visibility="gone">
+
                 <CheckBox
-                    android:gravity="center_horizontal"
                     android:id="@+id/cb_like"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@drawable/selector_like"
                     android:button="@android:color/transparent"
-                    android:checked="true" />
+                    android:checked="true"
+                    android:gravity="center_horizontal" />
+
                 <TextView
                     android:id="@+id/tv_like_count"
                     style="@style/SubTitleText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:textColor="@color/green"
                     android:maxLines="1"
-                    android:text="2000" />
+                    android:text="2000"
+                    android:textColor="@color/green" />
             </LinearLayout>
 
             <EditText
-                android:maxLines="5"
-                android:textAlignment="textStart"
-                style="@style/TextStyle"
                 android:id="@+id/et_komentar"
-                android:padding="15dp"
+                style="@style/TextStyle"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_edit_text_outlined"
                 android:hint="Komentar"
-                android:background="@drawable/bg_edit_text_outlined"/>
+                android:maxLines="5"
+                android:padding="15dp"
+                android:textAlignment="textStart" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:layout_marginStart="4dp"
-                android:layout_gravity="center_vertical"
-                android:button="@android:color/transparent"
                 android:id="@+id/btn_send"
-                android:background="@drawable/selector_btn_send"
                 android:layout_width="25dp"
-                android:layout_height="25dp"/>
-
-
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/selector_btn_send"
+                android:button="@android:color/transparent" />
         </LinearLayout>
-
     </LinearLayout>
+
     <ProgressBar
         android:id="@+id/pb_loading"
         android:layout_width="wrap_content"

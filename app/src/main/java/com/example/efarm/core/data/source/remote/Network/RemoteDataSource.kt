@@ -9,6 +9,7 @@ import com.example.efarm.core.data.source.remote.model.Part
 import com.example.efarm.core.data.source.remote.model.ResponseChatbot
 import com.example.efarm.core.di.CustomBaseUrl
 import com.example.efarm.core.di.DefaultBaseUrl
+import com.example.efarm.core.util.NUM_WORDS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Call
@@ -37,12 +38,10 @@ class RemoteDataSource @Inject constructor(
             if (response.isSuccessful) {
                 val success = response.body()
                 success?.confidence?.let {
-                    if (success.confidence >= 45) {
+                    if (success.confidence.toFloat() >= 0.8) {
                         emit(Resource.Success(response.body()!!))
                     } else {
                         emit(Resource.Error("Empty response"))
-
-                        //TODO get data form another source
                     }
                 }
 
@@ -60,7 +59,7 @@ class RemoteDataSource @Inject constructor(
                 Content(
                     parts = listOf(
                         Part(
-                            text = msg
+                            text = preProcess(msg)
                         )
                     )
                 )
@@ -86,6 +85,11 @@ class RemoteDataSource @Inject constructor(
         }
     }
 
+    private fun preProcess(msg: String):String{
+        return msg + """\n
+            Response using Indonesia language with maximum $NUM_WORDS words!
+        """.trimIndent()
+    }
     private suspend fun <T : Any> Call<T>.await(): Response<T> {
         return suspendCoroutine { continuation ->
             enqueue(object : Callback<T> {

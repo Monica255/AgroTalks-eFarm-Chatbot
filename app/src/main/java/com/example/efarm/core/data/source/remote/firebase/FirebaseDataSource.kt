@@ -15,6 +15,7 @@ import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.data.source.remote.model.UserData
 import com.example.efarm.core.util.KategoriTopik
+import com.example.efarm.core.util.VoteType
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -50,16 +51,66 @@ class FirebaseDataSource @Inject constructor(
     firebaseFirestore: FirebaseFirestore,
     @ApplicationContext private val context: Context
 ) {
-    val currentUser: FirebaseUser?
-        get() {
-            return firebaseAuth.currentUser
-        }
+    val currentUser: FirebaseUser?=FirebaseAuth.getInstance().currentUser
+
     private val storageUserRef = firebaseStorage.reference.child("thread_headers")
     private val userDataRef = firebaseDatabase.reference.child("user_data/")
     private val chatsRef = firebaseDatabase.reference.child("chats/")
     private val commentRef = firebaseFirestore.collection("forum_comments")
 
+    fun voteComment(comment: CommentForumPost,voteType: VoteType): Flow<Resource<Pair<Boolean, String?>>> {
+        return flow {
+            val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+            val vote: Boolean
+            val list = (if (voteType==VoteType.UP)comment.upvotes else comment.downvotes )?: mutableListOf()
+            val list2 =(if (voteType==VoteType.UP)comment.downvotes else comment.upvotes )?: mutableListOf()
+            var z = false
+            val s: FieldValue = if (isContainUid(list)) {
+                vote = false
+                FieldValue.arrayRemove(uid)
+            } else {
+                vote = true
+                z=(isContainUid(list2))
+                FieldValue.arrayUnion(uid)
+            }
+
+            try {
+                val result = suspendCancellableCoroutine<Boolean> { continuation ->
+                    commentRef.document(comment.id_comment).update(voteType.printable, s)
+                        .addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                if(vote&&z){
+                                    val d: FieldValue = FieldValue.arrayRemove(uid)
+                                    commentRef.document(comment.id_comment).update(if(voteType==VoteType.UP)VoteType.DOWN.printable else VoteType.UP.printable, d).addOnCompleteListener {
+                                        if(it.isSuccessful){
+                                            continuation.resume(true)
+                                        }else{
+                                            continuation.resume(false)
+                                        }
+                                    }
+                                }else{
+                                    continuation.resume(true)
+                                }
+                            } else {
+                                continuation.resume(false)
+                            }
+                        }
+                }
+
+                val successMsg = Pair(
+                    vote,uid
+                )
+
+                emit(Resource.Success(successMsg))
+            } catch (e: Exception) {
+                val errorMsg =
+                    if (vote) "Gagal voting up" else "Gagal voting down"
+                emit(Resource.Error(errorMsg))
+            }
+        }
+    }
     fun verifyForumPost(forumPost: ForumPost,verify:String?): Flow<Resource<Pair<String?, String?>>> {
+        val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
         return flow {
             try {
                 val result = suspendCancellableCoroutine<Boolean> { continuation ->
@@ -75,7 +126,7 @@ class FirebaseDataSource @Inject constructor(
 
                 val successMsg = Pair(
                     verify,
-                    currentUser?.uid
+                    uid
                 )
 
                 emit(Resource.Success(successMsg))
@@ -89,7 +140,7 @@ class FirebaseDataSource @Inject constructor(
 
     fun getChats(): MutableLiveData<List<Chat>?> {
         val chats = MutableLiveData<List<Chat>?>()
-        val x = currentUser?.uid
+        val x = FirebaseAuth.getInstance().currentUser?.uid.toString()
         x?.let {
             chatsRef.child(it)
                 .addValueEventListener(object : ValueEventListener {
@@ -128,7 +179,7 @@ class FirebaseDataSource @Inject constructor(
     suspend fun sendChat(data: Chat): MutableLiveData<Resource<String>> {
         val key = chatsRef.push().key
         val chat = MutableLiveData<Resource<String>>()
-        val x = currentUser?.uid
+        val x = FirebaseAuth.getInstance().currentUser?.uid.toString()
         val data2 = Chat(key, data.actor, data.message, data.timestamp)
 
         x?.let {id->
@@ -183,6 +234,7 @@ class FirebaseDataSource @Inject constructor(
         name: String = "",
         telepon: String = ""
     ): Pair<Boolean, String> {
+        val currentUser=FirebaseAuth.getInstance().currentUser
         if (name != "") {
             val profileUpdates = UserProfileChangeRequest.Builder()
                 .setDisplayName(name)
@@ -226,7 +278,6 @@ class FirebaseDataSource @Inject constructor(
                 result?.let {
                     if (result.user != null) {
                         emit(Resource.Success(context.getString(R.string.berhasil_login)))
-//                        setConnectionData(true)
                     } else {
                         emit(Resource.Error(context.getString(R.string.email_atau_password_mungkin_salah)))
                     }
@@ -240,7 +291,7 @@ class FirebaseDataSource @Inject constructor(
 
     fun getUserData(uid: String?): MutableLiveData<UserData?> {
         val userData = MutableLiveData<UserData?>()
-        val x = uid ?: currentUser?.uid
+        val x = uid ?: FirebaseAuth.getInstance().currentUser?.uid.toString()
         x?.let {
             userDataRef.child(it)
                 .addValueEventListener(object : ValueEventListener {
@@ -267,7 +318,7 @@ class FirebaseDataSource @Inject constructor(
     }
 
     fun signOut() {
-        if (currentUser != null) {
+        if (FirebaseAuth.getInstance().currentUser != null) {
             firebaseAuth.signOut()
         }
     }
@@ -447,7 +498,8 @@ class FirebaseDataSource @Inject constructor(
 
 
     private fun isContainUid(list: MutableList<String>): Boolean {
-        return list.contains(currentUser?.uid)
+        val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+        return list.contains(uid)
     }
 
 //    fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
@@ -488,14 +540,15 @@ class FirebaseDataSource @Inject constructor(
 
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
+            val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
             val favorite: Boolean
             val list = forumPost.likes ?: mutableListOf()
             val s: FieldValue = if (isContainUid(list)) {
                 favorite = false
-                FieldValue.arrayRemove(currentUser?.uid)
+                FieldValue.arrayRemove(uid)
             } else {
                 favorite = true
-                FieldValue.arrayUnion(currentUser?.uid)
+                FieldValue.arrayUnion(uid)
             }
 
             try {
@@ -511,8 +564,7 @@ class FirebaseDataSource @Inject constructor(
                 }
 
                 val successMsg = Pair(
-                    favorite,
-                    currentUser?.uid
+                    favorite, uid
                 )
 
                 emit(Resource.Success(successMsg))
@@ -551,6 +603,7 @@ class FirebaseDataSource @Inject constructor(
 
     fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
         return flow {
+            Log.d("TAG",idForum)
             emit(Resource.Loading())
             var x: ForumPost? = null
             try {
