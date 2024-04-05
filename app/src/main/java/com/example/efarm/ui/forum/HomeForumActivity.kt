@@ -61,9 +61,6 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Edit(tempPost!!,it.first))
                         var likes = post.likes?.size?:0
                         if (it.first) likes+=1 else likes-=1
-                        Log.d("TAG",likes.toString())
-                        Log.d("TAG",post.verified.toString())
-                        Log.d("TAG",post.user_id.toString())
                         if(post.user_id!= ADMIN_ID){
                             if(likes>= MIN_VERIFIED_POST&&post.verified==null){
                                 verified(post,"content")
@@ -99,6 +96,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 //        lifecycleScope.launch {
 //            viewModel.prepopulate()
 //        }
+        binding.tvName.text = getString(R.string.hallo_name,viewModel.currentUser?.displayName)
 
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost

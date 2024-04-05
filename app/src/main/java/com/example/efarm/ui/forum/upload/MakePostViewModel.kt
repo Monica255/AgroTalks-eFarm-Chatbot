@@ -24,7 +24,7 @@ class MakePostViewModel @Inject constructor(
     var topicsCommodity= MutableLiveData<MutableList<Topic>>()
     var topicsCommon= MutableLiveData<MutableList<Topic>>()
 
-    val currentUser = forumUseCase.currentUser
+//    val currentUser = forumUseCase.currentUser
 
     suspend fun getListTopik(kategori: KategoriTopik): LiveData<Resource<List<Topic>>> =
         forumUseCase.getListTopikForum(kategori).asLiveData()

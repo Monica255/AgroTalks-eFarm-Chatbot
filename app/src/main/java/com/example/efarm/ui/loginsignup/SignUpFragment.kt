@@ -46,7 +46,11 @@ class SignupFragment : Fragment() {
                 name.isEmpty()
             }
         nameStream.subscribe {
-
+            binding.etDaftarNama.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    showNameAlert(it)
+                }
+            }
         }
 
         val teleponStream = RxTextView.textChanges(binding.etDaftarTelepon)
@@ -55,7 +59,11 @@ class SignupFragment : Fragment() {
                 telp.length < 9 || telp.isEmpty()
             }
         teleponStream.subscribe {
-
+            binding.etDaftarTelepon.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    showNumberAlert(it)
+                }
+            }
         }
 
         val emailStream = RxTextView.textChanges(binding.etDaftarEmail)
@@ -64,7 +72,11 @@ class SignupFragment : Fragment() {
                 !Patterns.EMAIL_ADDRESS.matcher(email).matches()
             }
         emailStream.subscribe {
-
+            binding.etDaftarEmail.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    showEmailAlert(it)
+                }
+            }
         }
 
         val passwordStream = RxTextView.textChanges(binding.etDaftarPassword)
@@ -73,7 +85,11 @@ class SignupFragment : Fragment() {
                 password.length < 6
             }
         passwordStream.subscribe {
-
+            binding.etDaftarPassword.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    showPasswordAlert(it)
+                }
+            }
         }
         val passwordConfirmationStream = io.reactivex.Observable.merge(
             RxTextView.textChanges(binding.etDaftarPassword)
@@ -126,7 +142,6 @@ class SignupFragment : Fragment() {
                             is Resource.Error->{
                                 showLoading(false)
                                 it.message?.let{
-                                    Log.d("TAG",it)
                                     Toast.makeText(requireContext(),it,Toast.LENGTH_LONG).show()
                                 }
                             }
@@ -148,7 +163,6 @@ class SignupFragment : Fragment() {
             }
         }
 
-
         binding.cbShowPass.setOnClickListener {
             if (binding.cbShowPass.isChecked) {
                 binding.etDaftarPassword.transformationMethod =
@@ -164,7 +178,6 @@ class SignupFragment : Fragment() {
         }
 
     }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -172,19 +185,27 @@ class SignupFragment : Fragment() {
         _binding = FragmentSignupBinding.inflate(inflater, container, false)
         return binding.root
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding=null
     }
-
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility=if(isLoading) View.VISIBLE else View.GONE
     }
-
     private fun showPasswordConfirmationAlert(isNotValid: Boolean) {
         binding.etDaftarCpassword.error = if (isNotValid) "Password tidak sesuai" else null
-//        binding.ilDaftarCpassword.boxStrokeColor= R.color.red
-//        binding.ilDaftarCpassword.helperTextCurrentTextColor=R.color.red
+    }
+    private fun showPasswordAlert(isNotValid: Boolean) {
+        binding.etDaftarPassword.error = if (isNotValid) "Jumlah karakter password minimal 6" else null
+    }
+    private fun showNumberAlert(isNotValid: Boolean) {
+        binding.etDaftarTelepon.error = if (isNotValid) "Nomor telepon tidak valid" else null
+    }
+    private fun showEmailAlert(isNotValid: Boolean) {
+        binding.etDaftarEmail.error = if (isNotValid) "Email tidak valid" else null
+    }
+
+    private fun showNameAlert(isNotValid: Boolean) {
+        binding.etDaftarNama.error = if (isNotValid) "Nama tidak boleh kosong" else null
     }
 }

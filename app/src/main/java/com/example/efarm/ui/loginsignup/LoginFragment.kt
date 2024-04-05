@@ -3,6 +3,8 @@ package com.example.efarm.ui.loginsignup
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -98,6 +100,16 @@ class LoginFragment : Fragment() {
                         }
                     }
                 }
+            }
+        }
+
+        binding.cbShowPass.setOnClickListener {
+            if (binding.cbShowPass.isChecked) {
+                binding.etMasukPassword.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+            } else {
+                binding.etMasukPassword.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
             }
         }
 

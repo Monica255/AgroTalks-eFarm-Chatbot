@@ -17,6 +17,7 @@ import com.example.efarm.core.util.MIN_VERIFIED_POST
 import com.example.efarm.core.util.ViewEventsForumPost
 import com.example.efarm.core.util.ViewEventsVoteComment
 import com.example.efarm.core.util.VoteType
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,7 +36,7 @@ class ForumViewModel @Inject constructor(
     var topicsCommodity = MutableLiveData<MutableList<Topic>>()
     var topicsCommon = MutableLiveData<MutableList<Topic>>()
     var mTopics: Topic? = null
-    val currentUser = forumUseCase.currentUser
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     fun signOut() {
         authUseCase.signOut()
