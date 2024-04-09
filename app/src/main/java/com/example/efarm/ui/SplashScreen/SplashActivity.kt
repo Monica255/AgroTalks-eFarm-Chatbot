@@ -24,9 +24,10 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding=ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val currentUser = FirebaseAuth.getInstance().currentUser
         Handler(Looper.getMainLooper()).postDelayed({
             try {
-                val intent: Intent = if (viewModel.currentUser != null) {
+                val intent: Intent = if (currentUser != null) {
                     Intent(this, HomeForumActivity::class.java)
                 } else {
                     Intent(this, LoginSignupActivity::class.java)

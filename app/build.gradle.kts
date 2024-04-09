@@ -15,6 +15,20 @@ plugins {
 }
 
 android {
+
+    packaging {
+        exclude("META-INF/DEPENDENCIES")
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/LICENSE.txt")
+        exclude("META-INF/LICENSE.md")
+        exclude("META-INF/LICENSE-notice.md")
+        exclude("META-INF/license.txt")
+        exclude("META-INF/NOTICE")
+        exclude("META-INF/NOTICE.txt")
+        exclude("META-INF/notice.txt")
+        exclude("META-INF/ASL2.0")
+        exclude("META-INF/*.kotlin_module")
+    }
     namespace = "com.example.eFarm"
     compileSdk = 33
 
@@ -50,6 +64,42 @@ android {
 }
 
 dependencies {
+    implementation("androidx.test.espresso:espresso-intents:3.4.0")
+//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
+//    implementation("androidx.test.espresso:espresso-contrib:3.3.0")
+//    androidTestImplementation ("com.android.support.test.espresso:espresso-contrib:3.0.2")
+//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
+    androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+//    implementation ("androidx.work:work-runtime-ktx:2.7.0")
+//    implementation("androidx.test.espresso:espresso-contrib:3.5.1") {
+//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+//    }
+//    implementation("com.google.protobuf:protobuf-lite:3.0.1") {
+//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+//    }
+    //    implementation("androidx.test.espresso:espresso-intents:3.5.1")
+//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
+//    implementation("androidx.test.ext:junit-ktx:1.1.5")
+//    androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+//    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+//    implementation("com.google.protobuf:protobuf-lite:3.0.1")
+
+//    implementation("com.google.firebase:firebase-config:19.1.0") {
+//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+//    }
+
+//    implementation("com.google.protobuf:protobuf-javalite:3.19.2") {
+//        exclude(group = "com.google.protobuf", module = "protobuf-java")
+//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+//    }
+//    implementation("com.google.protobuf:protobuf-lite:3.0.1") {
+////        exclude(group = "com.google.protobuf", module = "protobuf-java")
+//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+////        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+//    }
+
     // Versions
     val kotlin_version = "1.7.0"
     val compose_version = "1.0.0-rc02"
@@ -66,7 +116,7 @@ dependencies {
     implementation("com.google.android.material:material:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
-    testImplementation("junit:junit:4.13.2")
+    testImplementation("junit:junit:5.8.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
