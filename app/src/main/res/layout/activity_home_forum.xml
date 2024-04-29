@@ -29,13 +29,12 @@
                 android:textSize="20sp" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btn_logout"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+                android:id="@+id/btn_profile"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_gravity="end"
-                android:layout_marginStart="4dp"
                 android:layout_marginEnd="@dimen/margin_start_end"
-                android:background="@drawable/selector_logout"
+                android:background="@drawable/icon_profile"
                 android:button="@android:color/transparent" />
         </androidx.appcompat.widget.Toolbar>
 
@@ -46,23 +45,6 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
         android:visibility="visible">
-        <TextView
-            android:id="@+id/tv_name"
-            android:background="#B30F8161"
-            android:paddingStart="@dimen/margin_layout_with_ds"
-            android:paddingEnd="@dimen/margin_layout_with_ds"
-            android:layout_width="match_parent"
-            style="@style/TitleText"
-            android:textColor="@color/white"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:text="@string/hallo_name"
-            android:paddingTop="@dimen/margin_item_with_ds"
-            android:paddingBottom="@dimen/margin_item_with_ds"
-            />
-
         <LinearLayout
             android:id="@+id/ll_topik"
             android:layout_width="match_parent"
@@ -70,7 +52,7 @@
             android:layout_marginStart="@dimen/margin_start_end"
             android:layout_marginEnd="@dimen/margin_layout_with_ds"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_name">
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 style="@style/SubSubHeader"

@@ -30,7 +30,7 @@ android {
         exclude("META-INF/*.kotlin_module")
     }
     namespace = "com.example.eFarm"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.efarm"
@@ -65,6 +65,7 @@ android {
 
 dependencies {
     implementation("androidx.test.espresso:espresso-intents:3.4.0")
+    implementation("androidx.activity:activity:1.8.0")
 //    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
 //    implementation("androidx.test.espresso:espresso-contrib:3.3.0")
 //    androidTestImplementation ("com.android.support.test.espresso:espresso-contrib:3.0.2")

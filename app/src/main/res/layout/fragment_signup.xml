@@ -44,19 +44,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tv_daftar" />
 
-                <ImageView
-                    android:id="@+id/img_logo"
-                    android:layout_width="115dp"
-                    android:layout_height="115dp"
-                    android:layout_marginTop="0dp"
-                    android:adjustViewBounds="true"
-                    android:contentDescription="Logo"
-                    android:src="@drawable/ph_logo_no_text"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-
-                    app:layout_constraintTop_toBottomOf="@id/tv_daftar_untuk_melanjutkan" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/il_daftar_email"
@@ -65,7 +52,7 @@
                     android:hint="Email"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/img_logo"
+                    app:layout_constraintTop_toBottomOf="@id/tv_daftar_untuk_melanjutkan"
                     app:startIconDrawable="@drawable/icon_email2">
 
                     <com.google.android.material.textfield.TextInputEditText

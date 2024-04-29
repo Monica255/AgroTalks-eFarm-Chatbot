@@ -115,11 +115,12 @@
                 android:layout_height="35dp"
                 android:layout_marginStart="@dimen/margin_start_end"
                 android:layout_marginTop="8dp"
+                android:layout_marginBottom="@dimen/margin_item_with_ds"
                 android:layout_marginEnd="@dimen/margin_start_end"
                 android:background="@drawable/selector_pilih_topik"
                 android:text="@string/pilih_topik"
                 android:textAllCaps="false"
-                android:textColor="@color/white"
+                android:textColor="@color/brown"
                 android:textSize="12dp" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 
 interface AuthUseCase {
-    fun getCurrentUser(): FirebaseUser?
+//    fun getCurrentUser(): FirebaseUser?
     suspend fun registerAccount(
         email: String,
         pass: String,

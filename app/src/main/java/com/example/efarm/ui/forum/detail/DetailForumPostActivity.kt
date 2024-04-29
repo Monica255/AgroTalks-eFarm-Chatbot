@@ -1,23 +1,27 @@
 package com.example.efarm.ui.forum.detail
 
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
+import android.text.style.ImageSpan
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivityDetailForumPostBinding
+import com.example.eFarm.databinding.FragmentThreadBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
@@ -30,12 +34,17 @@ import com.example.efarm.core.util.ViewEventsVoteComment
 import com.example.efarm.core.util.VoteType
 import com.example.efarm.ui.forum.FilterTopicAdapter
 import com.example.efarm.ui.forum.ForumViewModel
+import com.example.efarm.ui.forum.upload.ThreadFragment
+import com.example.efarm.ui.forum.upload.helper
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
+import java.util.concurrent.CountDownLatch
 
 @AndroidEntryPoint
 class DetailForumPostActivity : AppCompatActivity() {
@@ -44,42 +53,95 @@ class DetailForumPostActivity : AppCompatActivity() {
     private lateinit var adapterComment: PagingCommentAdapter
     private val viewModel: ForumViewModel by viewModels()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
-    var bestComment:CommentForumPost?=null
-    private var tempPost:CommentForumPost?=null
-    var start = 0
-    var end = 0
+    var bestComment: CommentForumPost? = null
+    private var tempPost: CommentForumPost? = null
+    lateinit var image: Drawable
+    val textSpan = SpannableStringBuilder()
+
+    val downloadImageTask =
+        helper.Companion.DownloadImageTask(object :
+            helper.Companion.DownloadImageTask.OnImageDownloadedListener {
+            override fun onImageDownloaded(drawable: List<Pair<Drawable?, Int>?>?) {
+                val maxWidth =
+                    binding.tvContentPost.width - binding.tvContentPost.paddingStart - binding.tvContentPost.paddingEnd
+                drawable?.let { pair ->
+                    pair.forEach {
+                        it?.let {img->
+                            img?.first?.let {
+                                image = it
+                                image?.let {
+                                    val drawableWidth = image.intrinsicWidth
+                                    val drawableHeight = image.intrinsicHeight
+                                    if (drawableHeight <= drawableWidth) {
+                                        val scaledHeight =
+                                            (maxWidth.toFloat() / drawableWidth.toFloat() * drawableHeight.toFloat()).toInt()
+                                        image?.setBounds(0, 0, maxWidth, scaledHeight)
+                                    } else {
+                                        val scaledWidth =
+                                            (maxWidth.toFloat() / drawableHeight.toFloat() * drawableWidth.toFloat()).toInt()
+                                        image?.setBounds(0, 0, scaledWidth, maxWidth)
+                                    }
+                                    val imageSpan =
+                                        image?.let { it1 -> ImageSpan(it1, ImageSpan.ALIGN_BOTTOM) }
+                                    Log.d("detail", img.second.toString())
+//                                    textSpan.insert(img.second, "\n \n")
+                                    textSpan.setSpan(
+                                        imageSpan, img.second + 1, img.second + 2,
+                                        Spannable.SPAN_INCLUSIVE_EXCLUSIVE
+                                    )
+
+                                }
+                            }
+
+
+                        }
+                    }
+                    binding.tvContentPost.text = textSpan
+                }
+            }
+        })
+
 
     private val onCheckChanged: ((CommentForumPost, VoteType) -> Unit) = { post, votetype ->
-        tempPost=post
-        viewModel.voteComment(post,votetype).observe(this){
-            when(it){
-                is Resource.Success->{
+        tempPost = post
+        viewModel.voteComment(post, votetype).observe(this) {
+            when (it) {
+                is Resource.Success -> {
                     it.data?.let {
-                        if(tempPost!=null)viewModel.onViewEventComment(ViewEventsVoteComment.Edit(tempPost!!,it.first,votetype));tempPost==null
+                        if (tempPost != null) viewModel.onViewEventComment(
+                            ViewEventsVoteComment.Edit(
+                                tempPost!!,
+                                it.first,
+                                votetype
+                            )
+                        );tempPost == null
                     }
                 }
-                is Resource.Error->{
+
+                is Resource.Error -> {
                     showError(it.message.toString())
                 }
-                is Resource.Loading->{}
+
+                is Resource.Loading -> {}
             }
         }
     }
 
-    private fun showError(msg:String){
-        Toast.makeText(binding.root.context, msg,Toast.LENGTH_SHORT).show()
+    private fun showError(msg: String) {
+        Toast.makeText(binding.root.context, msg, Toast.LENGTH_SHORT).show()
         tempPost?.let { it ->
             viewModel.onViewEventComment(ViewEventsVoteComment.Rebind(it))
-            tempPost=null
+            tempPost = null
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailForumPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapterTopic = FilterTopicAdapter (false){ }
+        adapterTopic = FilterTopicAdapter(false) { }
 
         val layoutManagerCommonTopic = FlexboxLayoutManager(this)
         layoutManagerCommonTopic.flexDirection = FlexDirection.ROW
@@ -94,8 +156,6 @@ class DetailForumPostActivity : AppCompatActivity() {
         }
 
         val id = intent.getStringExtra(FORUM_POST_ID)
-//        val string = intent.getStringExtra(START_IDX)?:""
-//        end = intent.getIntExtra(END_IDX,0)
         id?.let {
             viewModel.getDetailForum(it).observe(this) {
                 when (it) {
@@ -110,6 +170,7 @@ class DetailForumPostActivity : AppCompatActivity() {
             }
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun setData(data: ForumPost) {
         viewModel.getUserdata(data.user_id).observe(this) { it ->
@@ -122,27 +183,7 @@ class DetailForumPostActivity : AppCompatActivity() {
             }
         }
 
-        binding.tvPostTitle.text = data.title
-
-        if(start==0&&end==0){
-            binding.tvContentPost.text=data.content
-        }else{
-            val spannable = SpannableStringBuilder(data.content)
-
-            spannable.setSpan(
-                BackgroundColorSpan(Color.YELLOW),
-                start,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            binding.tvContentPost.text = spannable
-        }
-
-
-
-
         binding.iconVerified.visibility = if (data.verified != null) View.VISIBLE else View.GONE
-
 
         val isLiked = data.likes?.let { it.contains(uid) } ?: false
         if (data.likes != null && uid != null) {
@@ -151,24 +192,30 @@ class DetailForumPostActivity : AppCompatActivity() {
             binding.cbLike.isChecked = false
         }
 
-//        binding.tvLikeCount.text = TextFormater.formatLikeCounts(data.likes?.size?:0)
-
-
-        if(data.img_header==null||data.img_header==""){
-            binding.imgHeaderPost.visibility=View.GONE
-        }else{
+        if (data.img_header == null || data.img_header == "") {
+            binding.imgHeaderPost.visibility = View.GONE
+        } else {
             Glide.with(this)
                 .load(data.img_header)
                 .placeholder(R.drawable.placeholder)
                 .into(binding.imgHeaderPost)
-            binding.imgHeaderPost.visibility=View.VISIBLE
+            binding.imgHeaderPost.visibility = View.VISIBLE
         }
 
 
         binding.tvTimastamp.text = TextFormater.toPostTime(data.timestamp, this)
 
+        binding.tvPostTitle.text = data.title
+        textSpan.append(data.thread?.thread)
+        binding.tvContentPost.text = textSpan
+        Log.d("detail", "title "+data.title)
+        Log.d("detail", "thread "+data.thread?.thread?.length.toString())
 
-        adapterComment = PagingCommentAdapter(data.verified, viewModel, this,onCheckChanged)
+        data.thread?.images?.let { imgs ->
+            downloadImageTask.execute(imgs.toList())
+        }
+
+        adapterComment = PagingCommentAdapter(data.verified, viewModel, this, onCheckChanged)
         binding.rvKomentar.adapter = adapterComment
 
         lifecycleScope.launch {
@@ -252,7 +299,7 @@ class DetailForumPostActivity : AppCompatActivity() {
 
     private fun getComments(data: ForumPost) {
         lifecycleScope.launch {
-            if(data.verified!=null && data.verified!="content") {
+            if (data.verified != null && data.verified != "content") {
                 viewModel.getBestComment(data.verified!!).observe(this@DetailForumPostActivity) {
                     when (it) {
                         is Resource.Loading -> {
@@ -267,13 +314,13 @@ class DetailForumPostActivity : AppCompatActivity() {
                         }
 
                         is Resource.Success -> {
-                            bestComment=it.data
+                            bestComment = it.data
                             showLoading(false)
                             getComments(data.id_forum_post, bestComment)
                         }
                     }
                 }
-            }else{
+            } else {
                 getComments(data.id_forum_post, null)
 
             }
@@ -281,7 +328,7 @@ class DetailForumPostActivity : AppCompatActivity() {
 
     }
 
-    private fun getComments(idForum:String, bestCommnet: CommentForumPost?) {
+    private fun getComments(idForum: String, bestCommnet: CommentForumPost?) {
         viewModel.getComments(idForum, bestCommnet).observe(this) {
             adapterComment.submitData(lifecycle, it)
         }

@@ -50,7 +50,7 @@
                     android:layout_marginTop="50dp"
                     android:adjustViewBounds="true"
                     android:contentDescription="Logo"
-                    android:src="@drawable/ph_logo_no_text"
+                    android:src="@drawable/logo"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
 

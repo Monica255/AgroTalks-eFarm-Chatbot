@@ -9,12 +9,16 @@ const val MIN_VERIFIED_POST=100
 
 const val MIN_VERIFIED_COMMENT=100
 const val ADMIN_ID="QTBV6YNiIhdYCiSTXUvSv9wYdJS2"
-const val NUM_WORDS=200
+const val NUM_WORDS=150
 const val START_IDX="start"
 const val END_IDX="end"
 
 enum class KategoriTopik(val printable:String) {
     SEMUA(""),COMMON("common topics"), COMMODITY("commodity")
+}
+
+enum class Role(val printable:String) {
+    ADMIN("admin"),FARMER("farmer")
 }
 
 enum class ChatActor(val printable: String){

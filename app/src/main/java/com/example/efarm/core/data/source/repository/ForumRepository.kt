@@ -19,10 +19,12 @@ class ForumRepository @Inject constructor(
     private val firebaseDataSource: FirebaseDataSource,
     private val firebasePrepopulate: FirebasePrepopulate
 ):IForumRepository {
-    override val currentUser: FirebaseUser?=firebaseDataSource.currentUser
-    override fun getPagingForum(topic: Topic?): Flow<PagingData<ForumPost>> =firebaseDataSource.getPagingForum(topic)
+//    override val currentUser: FirebaseUser?=firebaseDataSource.currentUser
+    override fun getPagingForum(topic: Topic?,self:Boolean): Flow<PagingData<ForumPost>> =firebaseDataSource.getPagingForum(topic,self)
     override suspend fun getListTopikForum(kategoriTopik: KategoriTopik): Flow<Resource<List<Topic>>> =firebaseDataSource.getListTopikForum(kategoriTopik)
     override fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> =firebaseDataSource.likeForumPost(forumPost)
+    override fun deleteForumPost(forumPost: ForumPost): Flow<Resource<String?>> = firebaseDataSource.deleteForumPost(forumPost)
+
     override fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> = firebaseDataSource.getDetailForum(idForum)
     override suspend fun getTopics(topics: List<String>): Flow<Resource<List<Topic>>> = firebaseDataSource.getTopics(topics)
     override fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = firebaseDataSource.getComments(idForum,idBestComment)

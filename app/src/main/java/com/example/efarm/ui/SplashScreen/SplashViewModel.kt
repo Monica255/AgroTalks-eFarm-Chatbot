@@ -7,5 +7,5 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(useCase: AuthUseCase): ViewModel(){
-    val currentUser=useCase.getCurrentUser()
+//    val currentUser=useCase.getCurrentUser()
 }

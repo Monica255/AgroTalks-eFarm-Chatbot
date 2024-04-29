@@ -3,6 +3,7 @@ package com.example.efarm.core.data.source.remote.firebase
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -12,6 +13,7 @@ import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.Chat
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
+import com.example.efarm.core.data.source.remote.model.Images
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.data.source.remote.model.UserData
 import com.example.efarm.core.util.KategoriTopik
@@ -38,6 +40,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -51,26 +54,31 @@ class FirebaseDataSource @Inject constructor(
     firebaseFirestore: FirebaseFirestore,
     @ApplicationContext private val context: Context
 ) {
-    val currentUser: FirebaseUser?=FirebaseAuth.getInstance().currentUser
+//    val currentUser: FirebaseUser?=FirebaseAuth.getInstance().currentUser
 
     private val storageUserRef = firebaseStorage.reference.child("thread_headers")
     private val userDataRef = firebaseDatabase.reference.child("user_data/")
     private val chatsRef = firebaseDatabase.reference.child("chats/")
     private val commentRef = firebaseFirestore.collection("forum_comments")
 
-    fun voteComment(comment: CommentForumPost,voteType: VoteType): Flow<Resource<Pair<Boolean, String?>>> {
+    fun voteComment(
+        comment: CommentForumPost,
+        voteType: VoteType
+    ): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
-            val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+            val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
             val vote: Boolean
-            val list = (if (voteType==VoteType.UP)comment.upvotes else comment.downvotes )?: mutableListOf()
-            val list2 =(if (voteType==VoteType.UP)comment.downvotes else comment.upvotes )?: mutableListOf()
+            val list = (if (voteType == VoteType.UP) comment.upvotes else comment.downvotes)
+                ?: mutableListOf()
+            val list2 = (if (voteType == VoteType.UP) comment.downvotes else comment.upvotes)
+                ?: mutableListOf()
             var z = false
             val s: FieldValue = if (isContainUid(list)) {
                 vote = false
                 FieldValue.arrayRemove(uid)
             } else {
                 vote = true
-                z=(isContainUid(list2))
+                z = (isContainUid(list2))
                 FieldValue.arrayUnion(uid)
             }
 
@@ -79,16 +87,19 @@ class FirebaseDataSource @Inject constructor(
                     commentRef.document(comment.id_comment).update(voteType.printable, s)
                         .addOnCompleteListener {
                             if (it.isSuccessful) {
-                                if(vote&&z){
+                                if (vote && z) {
                                     val d: FieldValue = FieldValue.arrayRemove(uid)
-                                    commentRef.document(comment.id_comment).update(if(voteType==VoteType.UP)VoteType.DOWN.printable else VoteType.UP.printable, d).addOnCompleteListener {
-                                        if(it.isSuccessful){
+                                    commentRef.document(comment.id_comment).update(
+                                        if (voteType == VoteType.UP) VoteType.DOWN.printable else VoteType.UP.printable,
+                                        d
+                                    ).addOnCompleteListener {
+                                        if (it.isSuccessful) {
                                             continuation.resume(true)
-                                        }else{
+                                        } else {
                                             continuation.resume(false)
                                         }
                                     }
-                                }else{
+                                } else {
                                     continuation.resume(true)
                                 }
                             } else {
@@ -98,7 +109,7 @@ class FirebaseDataSource @Inject constructor(
                 }
 
                 val successMsg = Pair(
-                    vote,uid
+                    vote, uid
                 )
 
                 emit(Resource.Success(successMsg))
@@ -109,8 +120,12 @@ class FirebaseDataSource @Inject constructor(
             }
         }
     }
-    fun verifyForumPost(forumPost: ForumPost,verify:String?): Flow<Resource<Pair<String?, String?>>> {
-        val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+
+    fun verifyForumPost(
+        forumPost: ForumPost,
+        verify: String?
+    ): Flow<Resource<Pair<String?, String?>>> {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
         return flow {
             try {
                 val result = suspendCancellableCoroutine<Boolean> { continuation ->
@@ -146,7 +161,6 @@ class FirebaseDataSource @Inject constructor(
                 .addValueEventListener(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) {
-                            Log.d("chat",snapshot.toString())
                             try {
                                 val chatList = mutableListOf<Chat>()
                                 for (chatSnapshot in snapshot.children) {
@@ -161,7 +175,7 @@ class FirebaseDataSource @Inject constructor(
                                 chats.value = null
                                 Log.d("TAG", e.message.toString())
                             }
-                        }else{
+                        } else {
                             chats.value = null
                         }
                     }
@@ -182,21 +196,22 @@ class FirebaseDataSource @Inject constructor(
         val x = FirebaseAuth.getInstance().currentUser?.uid.toString()
         val data2 = Chat(key, data.actor, data.message, data.timestamp)
 
-        x?.let {id->
+        x?.let { id ->
             chatsRef.child(id).child(key!!).setValue(data2).addOnCompleteListener {
-                if(it.isSuccessful){
-                    if(data.thread!=null){
-                        chatsRef.child(id).child(key).child("thread").setValue(data.thread).addOnCompleteListener{
-                            if(it.isSuccessful){
-                                chat.value = Resource.Success("Berhasil mengirim data")
-                            }else{
-                                chat.value = Resource.Error("gagal mengirim data")
+                if (it.isSuccessful) {
+                    if (data.thread != null) {
+                        chatsRef.child(id).child(key).child("thread").setValue(data.thread)
+                            .addOnCompleteListener {
+                                if (it.isSuccessful) {
+                                    chat.value = Resource.Success("Berhasil mengirim data")
+                                } else {
+                                    chat.value = Resource.Error("gagal mengirim data")
+                                }
                             }
-                        }
-                    }else{
+                    } else {
                         chat.value = Resource.Success("Berhasil mengirim data")
                     }
-                }else{
+                } else {
                     chat.value = Resource.Error("gagal mengirim data")
                 }
             }.await()
@@ -234,7 +249,7 @@ class FirebaseDataSource @Inject constructor(
         name: String = "",
         telepon: String = ""
     ): Pair<Boolean, String> {
-        val currentUser=FirebaseAuth.getInstance().currentUser
+        val currentUser = FirebaseAuth.getInstance().currentUser
         if (name != "") {
             val profileUpdates = UserProfileChangeRequest.Builder()
                 .setDisplayName(name)
@@ -270,6 +285,7 @@ class FirebaseDataSource @Inject constructor(
         return result
     }
 
+
     fun login(email: String, pass: String): Flow<Resource<String>> {
         return flow {
             try {
@@ -283,7 +299,7 @@ class FirebaseDataSource @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                emit(Resource.Error(e.toString()))
+                emit(Resource.Error(context.getString(R.string.email_atau_password_mungkin_salah)))
                 Log.e("TAG", e.toString())
             }
         }
@@ -325,7 +341,8 @@ class FirebaseDataSource @Inject constructor(
 
     private val forumRef = firebaseFirestore.collection("forum_posts")
     fun getPagingForum(
-        topic: Topic? = null
+        topic: Topic? = null,
+        self: Boolean = false
     ): Flow<PagingData<ForumPost>> {
         var query: Query
         if (topic != null) {
@@ -336,6 +353,8 @@ class FirebaseDataSource @Inject constructor(
             query = forumRef.orderBy("timestamp", Query.Direction.DESCENDING)
                 .limit(4)
         }
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        if (self) query = query.whereEqualTo("user_id", uid)
 
         val pager = Pager(
             config = PagingConfig(
@@ -365,19 +384,6 @@ class FirebaseDataSource @Inject constructor(
         return pager.flow
     }
 
-//    fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
-//        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",comments).limit(3)
-//        val pager = Pager(
-//            config = PagingConfig(
-//                pageSize = 3
-//            ),
-//            pagingSourceFactory = {
-//                CommentForumPagingStore(query,idBestComment)
-//            }
-//        )
-//        return pager.flow
-//    }
-
     private val topicRef = firebaseFirestore.collection("topics")
     private fun getQueryTopicByCategory(kategori: KategoriTopik): Query {
         return if (kategori != KategoriTopik.SEMUA) {
@@ -387,37 +393,6 @@ class FirebaseDataSource @Inject constructor(
             topicRef.orderBy("topic_name", Query.Direction.ASCENDING)
         }
     }
-
-//    suspend fun getListTopikForum(kategory: KategoriTopik): Flow<Resource<List<Topic>>> {
-//        var list = mutableListOf<Topic>()
-//        var msg: String? = null
-//        return flow {
-//            emit(Resource.Loading())
-//            val query = getQueryTopicByCategory(kategory)
-//            query.get().addOnCompleteListener {
-//                if (it.isSuccessful) {
-//                    try {
-//                        for (i in it.result) {
-//                            val x = i.toObject<Topic>()
-//                            list.add(x)
-//                        }
-//                    } catch (e: Exception) {
-//                        msg = e.message
-//                        list = mutableListOf()
-//                    }
-//                } else {
-//                    msg = "Error"
-//                    list = mutableListOf()
-//                }
-//            }.await()
-//
-//            if (msg != null) {
-//                emit(Resource.Error(msg!!))
-//            } else {
-//                emit(Resource.Success(list))
-//            }
-//        }
-//    }
 
     suspend fun getListTopikForum(kategory: KategoriTopik): Flow<Resource<List<Topic>>> {
         return flow {
@@ -444,32 +419,6 @@ class FirebaseDataSource @Inject constructor(
             }
         }
     }
-
-
-//    suspend fun getTopics(topics:List<String>): Flow<Resource<List<Topic>>>{
-//        var list= mutableListOf<Topic>()
-//        var msg:String?=context.getString(R.string.gagal_mendapatkan_data)
-//        return flow{
-//            topicRef.whereIn("topic_id",topics).get().addOnCompleteListener {
-//                if(it.isSuccessful){
-//                    msg=null
-//                    try{
-//                        for(i in it.result){
-//                            val x=i.toObject<Topic>()
-//                            list.add(x)
-//                        }
-//                    }catch (e:Exception){
-//                        Log.d("TAG","unsuccessful")
-//                    }
-//                }
-//            }.await()
-//            if (msg != null) {
-//                emit(Resource.Error(msg!!))
-//            } else {
-//                emit(Resource.Success(list))
-//            }
-//        }
-//    }
 
     suspend fun getTopics(topics: List<String>): Flow<Resource<List<Topic>>> {
         return flow {
@@ -498,49 +447,13 @@ class FirebaseDataSource @Inject constructor(
 
 
     private fun isContainUid(list: MutableList<String>): Boolean {
-        val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
         return list.contains(uid)
     }
 
-//    fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
-//        return flow {
-//            emit(Resource.Loading())
-//            val favorite: Boolean
-//            val list = forumPost.likes ?: mutableListOf()
-//            val s: FieldValue = if (isContainUid(list)) {
-//                favorite = false
-//                FieldValue.arrayRemove(currentUser?.uid)
-//            } else {
-//                favorite = true
-//                FieldValue.arrayUnion(currentUser?.uid)
-//            }
-//            var successMsg: Pair<Boolean, String?>? = null
-//            var errorMsg = ""
-//            forumRef.document(forumPost.id_forum_post).update("likes", s)
-//                .addOnCompleteListener {
-//                    if (it.isSuccessful) {
-//                        Log.d("like","like successful")
-//                        forumRef.document(forumPost.id_forum_post)
-//                            .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
-//                        successMsg = Pair(
-//                            favorite,
-//                            currentUser?.uid
-//                        )
-//                    } else {
-//                        errorMsg =
-//                            if (favorite) "Gagal menyukai postingan" else "Gagal menghapus suka paka postingan"
-//                    }
-//                }.await()
-//            if (successMsg != null) {
-//                emit(Resource.Success(successMsg!!))
-//            } else emit(Resource.Error(errorMsg))
-//        }
-//    }
-
-
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
-            val uid=FirebaseAuth.getInstance().currentUser?.uid.toString()
+            val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
             val favorite: Boolean
             val list = forumPost.likes ?: mutableListOf()
             val s: FieldValue = if (isContainUid(list)) {
@@ -576,39 +489,53 @@ class FirebaseDataSource @Inject constructor(
         }
     }
 
+    fun deleteForumPost(forumPost: ForumPost): Flow<Resource<String?>> {
+        val errorMsg = "Gagal menghapus postingan"
+        return flow {
+            emit(Resource.Loading())
+            try {
+                if ((forumPost.img_header != null && forumPost.img_header != "")||(forumPost.thread?.images!=null&&forumPost.thread?.images?.isNotEmpty()==true)) {
+                    suspendCancellableCoroutine<Boolean> { con ->
+                        storageUserRef.child(forumPost.id_forum_post).listAll()
+                            .addOnSuccessListener { listResult ->
+                                val item = listResult.items
+                                if (item.isNotEmpty()) {
+                                    listResult.items.forEach { item ->
+                                        item.delete()
+                                    }
+                                }
+                                con.resume(true)
+                            }.addOnFailureListener { exception ->
+                                con.resume(false)
+                        }
+                    }
 
-//    fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
-//        var x: ForumPost? = null
-//        var msg = context.getString(R.string.gagal_mendapatkan_data)
-//        return flow {
-//            emit(Resource.Loading())
-//            forumRef.document(idForum).get().addOnCompleteListener {
-//                if (it.isSuccessful) {
-//                    try {
-//                        x = it.result.toObject<ForumPost>()
-//                    } catch (e: Exception) {
-//                        msg = e.message.toString()
-//                    }
-//                } else {
-//                    Log.d("TAG", "unsuccessful")
-//                }
-//            }.await()
-//            if (x != null) {
-//                emit(Resource.Success(x!!))
-//            } else {
-//                emit(Resource.Error(msg))
-//            }
-//        }
-//    }
+                }
+                suspendCancellableCoroutine<Boolean> { continuation ->
+                    forumRef.document(forumPost.id_forum_post).delete()
+                        .addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                continuation.resume(true)
+                            } else {
+                                continuation.resume(false)
+                            }
+                        }
+                }
+                emit(Resource.Success("Berhasil menghapus postingan"))
+            } catch (e: Exception) {
+                emit(Resource.Error(errorMsg))
+            }
+        }
+    }
 
     fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
         return flow {
-            Log.d("TAG",idForum)
             emit(Resource.Loading())
             var x: ForumPost? = null
             try {
                 val result = suspendCoroutine<Task<DocumentSnapshot>> { continuation ->
                     forumRef.document(idForum).get().addOnCompleteListener { task ->
+                        Log.d("detail","tak running")
                         continuation.resume(task)
                     }
                 }
@@ -655,39 +582,6 @@ class FirebaseDataSource @Inject constructor(
         }
     }
 
-//    suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> {
-//        val key = commentRef.document().id
-//        var msg: String? = null
-//        comment.id_comment = key
-//        return flow {
-//            emit(Resource.Loading())
-//            val x = FieldValue.arrayUnion(key)
-//            forumRef.document(comment.id_forum_post).update("comments", FieldValue.arrayUnion(key))
-//                .addOnCompleteListener {
-//                    if (it.isSuccessful) {
-//                        commentRef.document(key).set(comment).addOnCompleteListener {
-//                            try {
-//                                if (!it.isSuccessful) {
-//                                    val exception = it.exception
-//                                    msg = exception.toString()
-//                                }
-//                            } catch (e: Exception) {
-//                                msg = e.message
-//                            }
-//                        }
-//                    } else {
-//                        msg = "Error adding new comment"
-//                    }
-//                }.await()
-//
-//            if (msg != null) {
-//                emit(Resource.Error(msg!!))
-//            } else {
-//                emit(Resource.Success("Comment added successfully"))
-//            }
-//        }
-//    }
-
     suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> {
         val key = commentRef.document().id
         var msg: String? = null
@@ -710,7 +604,7 @@ class FirebaseDataSource @Inject constructor(
                             }
                     }
                     if (commentResult.isSuccessful) {
-                        emit(Resource.Success("Comment added successfully"))
+                        emit(Resource.Success("Komentar berhasil ditambahkan"))
                     }
                 } else {
                     emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
@@ -721,90 +615,37 @@ class FirebaseDataSource @Inject constructor(
         }
     }
 
-
-//    suspend fun uploadThread(data: ForumPost, file: Uri?): Flow<Resource<String>> {
-//        val key = forumRef.document().id
-//        var msg: String? = null
-//        data.id_forum_post = key
-//        return flow {
-//            emit(Resource.Loading())
-//            if (file != null) {
-//                val r = storageUserRef.child(key).putFile(file).await()
-//                if (r !== null) {
-//                    if (r.task.isSuccessful) {
-//                        storageUserRef.child(key).downloadUrl.addOnCompleteListener { uri ->
-//                            data.img_header = uri.result.toString()
-//                            forumRef.document(key).set(data).addOnCompleteListener {
-//                                try {
-//                                    if (!it.isSuccessful) {
-//                                        val exception = it.exception
-//                                        msg = exception.toString()
-//                                    }
-//                                } catch (e: Exception) {
-//                                    msg = e.message
-//                                }
-//                            }
-//                        }
-//                    } else {
-//                        msg = "Failed to upload image"
-//                    }
-//                } else {
-//                    msg = "Failed to upload image"
-//                }
-//            } else {
-//                forumRef.document(key).set(data).addOnCompleteListener {
-//                    try {
-//                        if (!it.isSuccessful) {
-//                            val exception = it.exception
-//                            msg = exception.toString()
-//                        }
-//                    } catch (e: Exception) {
-//                        msg = e.message
-//                    }
-//                }
-//            }
-//
-//            if (msg != null) {
-//                emit(Resource.Error(msg!!))
-//            } else {
-//                emit(Resource.Success("Thread uploaded successfully"))
-//            }
-//        }
-//    }
-
     suspend fun uploadThread(data: ForumPost, file: Uri?): Flow<Resource<String>> {
         val key = forumRef.document().id
         data.id_forum_post = key
+        val listImages = mutableListOf<Images>()
         return flow {
-            emit(Resource.Loading())
-
-            if (file != null) {
-                try {
-                    val r = storageUserRef.child(key).putFile(file).await()
-
+            try {
+                emit(Resource.Loading())
+                if (file != null && file.path != null) {
+                    val mFile = File(file.path)
+                    val r = storageUserRef.child(key).child(mFile.name).putFile(file).await()
                     if (r != null && r.task.isSuccessful) {
-                        val uri = storageUserRef.child(key).downloadUrl.await()
-
-                        if (uri != null) {
-                            data.img_header = uri.toString()
-                            val setResult = suspendCoroutine<Task<Void>> { continuation ->
-                                forumRef.document(key).set(data).addOnCompleteListener { task ->
-                                    continuation.resume(task)
-                                }
-                            }
-                            if (setResult.isSuccessful) {
-                                emit(Resource.Success("Comment added successfully"))
-                            }
-                        } else {
-                            emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
-                        }
+                        val uri = storageUserRef.child(key).child(mFile.name).downloadUrl.await()
+                        if (uri != null) data.img_header = uri.toString()
                     } else {
                         emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
                     }
-                } catch (e: Exception) {
-                    emit(Resource.Error(e.message.toString()))
                 }
-            } else {
+                data.thread?.images?.forEachIndexed { index, it ->
+                    it.image?.let {img->
+                        val mFile = File(img.toUri().path)
+                        val r = storageUserRef.child(key).child(mFile.name).putFile(img.toUri()).await()
+                        if (r != null && r.task.isSuccessful) {
+                            val uri = storageUserRef.child(key).child(mFile.name).downloadUrl.await()
+                            if (uri != null) listImages.add(index,Images(it.position,uri.toString()))
+                        } else {
+                            emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                        }
+                    }
+                }
+                data.thread?.images=listImages
+//            else {
                 val setResult = suspendCoroutine<Task<Void>> { continuation ->
                     forumRef.document(key).set(data).addOnCompleteListener { task ->
                         continuation.resume(task)
@@ -812,8 +653,11 @@ class FirebaseDataSource @Inject constructor(
                 }
 
                 if (setResult.isSuccessful) {
-                    emit(Resource.Success("Comment added successfully"))
+                    emit(Resource.Success("Berhasil membagikan"))
                 }
+//            }
+            } catch (e: Exception) {
+                emit(Resource.Error("Photo: " + e.message.toString()))
             }
         }
     }

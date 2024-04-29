@@ -27,6 +27,7 @@ import com.example.efarm.core.util.MIN_VERIFIED_POST
 import com.example.efarm.core.util.ViewEventsForumPost
 import com.example.efarm.ui.forum.chatbot.ChatActivity
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
+import com.example.efarm.ui.forum.profile.ProfileActivity
 import com.example.efarm.ui.forum.upload.MakePostActivity
 import com.example.efarm.ui.loginsignup.LoginSignupActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -50,6 +51,10 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         intent.putExtra(FORUM_POST_ID, post.id_forum_post)
         startActivity(intent)
 
+    }
+
+    private val onDelete: ((ForumPost)->Unit) ={post->
+        showConfirmDialogDelete(post)
     }
 
     private val onCheckChanged: ((ForumPost) -> Unit) = { post ->
@@ -87,6 +92,15 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             viewModel.getData()
         }
     }
+
+    private val launcherProfile = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {result ->
+        Log.d("TAG",result.resultCode.toString())
+        if (result.resultCode == RESULT_OK) {
+            viewModel.getData()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeForumBinding.inflate(layoutInflater)
@@ -96,20 +110,19 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 //        lifecycleScope.launch {
 //            viewModel.prepopulate()
 //        }
-        binding.tvName.text = getString(R.string.hallo_name,viewModel.currentUser?.displayName)
 
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost
-        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,viewModel,this)
+        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,onDelete,viewModel,this)
 
         binding.rvForumPost.adapter = adapterForum
 
         viewModel.getData()
         viewModel.pagingData.observe(this) { it ->
-            binding.rvForumPost.smoothScrollToPosition(0)
             it.observe(this) {
                 if (it != null) {
                     adapterForum.submitData(lifecycle, it)
+//                    binding.rvForumPost.smoothScrollToPosition(1)
                     binding.swipeRefresh.isRefreshing = false
                 }
             }
@@ -121,8 +134,10 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             }
         }
 
-        binding.btnLogout.setOnClickListener{
-            showConfirmDialog()
+        binding.btnProfile.setOnClickListener{
+            val intent = Intent(this, ProfileActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            launcherProfile.launch(intent)
         }
 
         binding.swipeRefresh.setOnRefreshListener {
@@ -141,6 +156,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             val intent = Intent(this, ChatActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
+
         }
 
         binding.btnTopikPostForum.setOnClickListener {
@@ -173,26 +189,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
     }
 
-    private fun showConfirmDialog() {
-        val builder = AlertDialog.Builder(this)
-        val mConfirmDialog = builder.create()
-        builder.setTitle(getString(R.string.keluar))
-        builder.setMessage(getString(R.string.yakin_ingin_keluar))
-        builder.create()
 
-        builder.setPositiveButton(getString(R.string.ya)) { _, _ ->
-            viewModel.signOut()
-            val intent = Intent(this, LoginSignupActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-            showLoading(false)
-        }
-
-        builder.setNegativeButton(getString(R.string.tidak)) { _, _ ->
-            mConfirmDialog.cancel()
-        }
-        builder.show()
-    }
     private fun verified(post:ForumPost,verified:String?){
         viewModel.verifyForumPost(post,verified).observe(this@HomeForumActivity){
             when(it){
@@ -203,6 +200,45 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     showError(it.message.toString())
                 }
                 is Resource.Loading->{}
+            }
+        }
+    }
+
+    private fun showConfirmDialogDelete(post: ForumPost) {
+        val builder = AlertDialog.Builder(this)
+        val mConfirmDialog = builder.create()
+        builder.setTitle(getString(R.string.hapus))
+        builder.setMessage(getString(R.string.yakin_ingin_hapus))
+        builder.create()
+
+        builder.setPositiveButton(getString(R.string.ya)) { _, _ ->
+            delete(post)
+            showLoading(false)
+        }
+
+        builder.setNegativeButton(getString(R.string.tidak)) { _, _ ->
+            mConfirmDialog.cancel()
+        }
+        builder.show()
+    }
+
+    private fun delete(post:ForumPost){
+        tempPost=post
+        viewModel.deleteForumPost(post).observe(this){
+            when(it){
+                is Resource.Success->{
+                    showLoading(false)
+                    it.data?.let {
+                        if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Remove(tempPost!!));tempPost==null
+                    }
+                }
+                is Resource.Error->{
+                    showLoading(false)
+                    showError(it.message.toString())
+                }
+                is Resource.Loading->{
+                    showLoading(true)
+                }
             }
         }
     }

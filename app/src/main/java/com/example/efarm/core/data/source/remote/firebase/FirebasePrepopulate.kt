@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
 import com.example.efarm.core.data.source.remote.model.ForumPost
+import com.example.efarm.core.data.source.remote.model.Thread
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -48,8 +49,9 @@ class FirebasePrepopulate @Inject constructor(
                 if(topics.isEmpty()){
                     return
                 }
+                val thread=Thread(thread = content)
                 // Create an object and add it to the list
-                val post = ForumPost(id_forum_post,uid,title, content,img,time,null,null,topics,verified,link)
+                val post = ForumPost(id_forum_post,uid,title, img,time,null,null,topics,verified,link,thread)
                 list.add(post)
 
                 try {

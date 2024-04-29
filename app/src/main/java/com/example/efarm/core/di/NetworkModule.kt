@@ -30,7 +30,7 @@ class NetworkModule {
     @Provides
     @CustomBaseUrl
     fun provideCustomApiService(client: OkHttpClient): ApiService {
-        return createApiService(client, "https://terbul255-6886dd53-57eb-4791-9ee2-366685f1de78.socketxp.com/")
+        return createApiService(client, "http://192.168.231.164:8000/")
     }
     private fun createApiService(client: OkHttpClient, baseUrl: String): ApiService {
         val retrofit = Retrofit.Builder()
@@ -41,3 +41,4 @@ class NetworkModule {
         return retrofit.create(ApiService::class.java)
     }
 }
+//https://terbul255-6886dd53-57eb-4791-9ee2-366685f1de78.socketxp.com/

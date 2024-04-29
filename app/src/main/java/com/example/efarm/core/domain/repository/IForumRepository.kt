@@ -12,14 +12,16 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 
 interface IForumRepository {
-    val currentUser:FirebaseUser?
+//    val currentUser:FirebaseUser?
     fun getPagingForum(
-        topic: Topic?
+        topic: Topic?,
+        self:Boolean
     ): Flow<PagingData<ForumPost>>
 
     suspend fun getListTopikForum(kategoriTopik: KategoriTopik): Flow<Resource<List<Topic>>>
 
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>>
+    fun deleteForumPost(forumPost: ForumPost): Flow<Resource<String?>>
 
     fun getDetailForum(idForum:String): Flow<Resource<ForumPost>>
 

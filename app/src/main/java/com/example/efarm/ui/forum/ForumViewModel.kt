@@ -46,6 +46,8 @@ class ForumViewModel @Inject constructor(
 
     fun likeForumPost(forumPost: ForumPost) = forumUseCase.likeForumPost(forumPost).asLiveData()
 
+    fun deleteForumPost(forumPost: ForumPost) = forumUseCase.deleteForumPost(forumPost).asLiveData()
+
     private lateinit var modificationEventsForumPost: MutableStateFlow<List<ViewEventsForumPost>>
 
     private var modificationEventsComment: MutableStateFlow<List<ViewEventsVoteComment>> = MutableStateFlow(emptyList())
@@ -54,10 +56,10 @@ class ForumViewModel @Inject constructor(
     //Paging
     val pagingData = MutableLiveData<LiveData<PagingData<ForumPost>>>()
 
-    fun getData(topic: Topic? = mTopics) {
+    fun getData(topic: Topic? = mTopics,self:Boolean=false) {
         if (mTopics != topic) mTopics = topic
         modificationEventsForumPost = MutableStateFlow(emptyList())
-        pagingData.value = forumUseCase.getPagingForum(mTopics)
+        pagingData.value = forumUseCase.getPagingForum(mTopics,self)
             .cachedIn(viewModelScope)
             .combine(modificationEventsForumPost) { pagingData, modifications ->
                 modifications.fold(pagingData) { acc, event ->

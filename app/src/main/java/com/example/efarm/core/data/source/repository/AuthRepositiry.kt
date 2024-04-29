@@ -14,7 +14,7 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val firebaseDataSource: FirebaseDataSource
 ) : IAuthRepository {
-    override fun getCurrentUser(): FirebaseUser? = firebaseDataSource.currentUser
+//    override fun getCurrentUser(): FirebaseUser? = firebaseDataSource.currentUser
     override suspend fun registerAccount(
         email: String,
         pass: String,

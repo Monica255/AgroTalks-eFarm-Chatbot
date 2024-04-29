@@ -11,7 +11,7 @@ class LoginSignupViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
 ) : ViewModel() {
 
-    var currentUser = authUseCase.getCurrentUser()
+//    var currentUser = authUseCase.getCurrentUser()
 
     suspend fun login(email: String, pass: String) = authUseCase.login(email, pass).asLiveData()
 

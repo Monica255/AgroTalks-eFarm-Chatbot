@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class AuthInteractor@Inject constructor(private val repo: IAuthRepository):AuthUseCase {
-    override fun getCurrentUser(): FirebaseUser?=repo.getCurrentUser()
+//    override fun getCurrentUser(): FirebaseUser?=repo.getCurrentUser()
     override suspend fun registerAccount(
         email: String,
         pass: String,

@@ -43,4 +43,8 @@
     <string name="hello_im_chatbot_nwhat_can_i_help_you">hello im chatbot, \nwhat can i help you?</string>
     <string name="initial_chat">Selamat datang di chatbot. Ada yang ingin ditanyakan?</string>
     <string name="hallo_name">Halo %1$s</string>
+    <string name="profile">Profile</string>
+    <string name="hapus">Hapus</string>
+    <string name="yakin_ingin_hapus">Yakin ingin menghapus postingan ini?</string>
+    <string name="tambah_gambar">+ tambah gambar(%1$s/5)</string>
 </resources>

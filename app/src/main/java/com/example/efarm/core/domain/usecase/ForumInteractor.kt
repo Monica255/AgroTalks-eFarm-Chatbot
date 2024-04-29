@@ -16,13 +16,15 @@ import javax.inject.Inject
 class ForumInteractor @Inject constructor(
     private val repo: IForumRepository
 ) :ForumUseCase{
-    override val currentUser: FirebaseUser?=repo.currentUser
+//    override val currentUser: FirebaseUser?=repo.currentUser
 
-    override fun getPagingForum(topic: Topic?): Flow<PagingData<ForumPost>> =repo.getPagingForum(topic)
+    override fun getPagingForum(topic: Topic?,self:Boolean): Flow<PagingData<ForumPost>> =repo.getPagingForum(topic,self)
 
     override suspend fun getListTopikForum(kategoriTopik: KategoriTopik): Flow<Resource<List<Topic>>> =repo.getListTopikForum(kategoriTopik)
 
     override fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> =repo.likeForumPost(forumPost)
+    override fun deleteForumPost(forumPost: ForumPost): Flow<Resource<String?>> = repo.deleteForumPost(forumPost)
+
     override fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> = repo.getDetailForum(idForum)
     override suspend fun getTopics(topics: List<String>) = repo.getTopics(topics)
     override fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = repo.getComments(idForum,idBestComment)

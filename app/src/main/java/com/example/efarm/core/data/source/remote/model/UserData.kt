@@ -5,6 +5,6 @@ data class UserData(
     var name: String = "",
     var phone_number: String = "",
     var uid: String = "",
-    var img_profile: String = ""
-
+    var img_profile: String = "",
+    var role: String = "farmer"
 )

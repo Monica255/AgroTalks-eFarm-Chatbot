@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.SpannableStringBuilder
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -29,6 +30,7 @@ import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivityMakePostBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.ForumPost
+import com.example.efarm.core.data.source.remote.model.Thread
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.ADMIN_ID
 import com.example.efarm.core.util.DateConverter
@@ -59,7 +61,7 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
     private lateinit var adapterTopic: FilterTopicAdapter
     private val viewModel: MakePostViewModel by viewModels()
     var uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    private var getFile: File? = null
+//    private var getFile: File? = null
     private var filePath: Uri? = null
 
     companion object {
@@ -135,20 +137,20 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
         }
     }
 
-    private fun uriToFile(selectedImg: Uri, context: Context): File {
-        val contentResolver: ContentResolver = context.contentResolver
-        val myFile = createCustomTempFile(context)
-
-        val inputStream = contentResolver.openInputStream(selectedImg) as InputStream
-        val outputStream: OutputStream = FileOutputStream(myFile)
-        val buf = ByteArray(1024)
-        var len: Int
-        while (inputStream.read(buf).also { len = it } > 0) outputStream.write(buf, 0, len)
-        outputStream.close()
-        inputStream.close()
-
-        return myFile
-    }
+//    private fun uriToFile(selectedImg: Uri, context: Context): File {
+//        val contentResolver: ContentResolver = context.contentResolver
+//        val myFile = createCustomTempFile(context)
+//
+//        val inputStream = contentResolver.openInputStream(selectedImg) as InputStream
+//        val outputStream: OutputStream = FileOutputStream(myFile)
+//        val buf = ByteArray(1024)
+//        var len: Int
+//        while (inputStream.read(buf).also { len = it } > 0) outputStream.write(buf, 0, len)
+//        outputStream.close()
+//        inputStream.close()
+//
+//        return myFile
+//    }
 
     private val launcherIntentGallery = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -157,8 +159,8 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
             filePath = result.data?.data as Uri
             if (filePath != null) {
                 anyPhoto=true
-                val temp: Uri = filePath!!
-                val myFile = uriToFile(temp, this)
+//                val temp: Uri = filePath!!
+//                val myFile = uriToFile(temp, this)
 //                getFile = myFile
                 binding.imgHeader.setImageURI(filePath)
 
@@ -180,14 +182,6 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
         ActivityResultContracts.StartActivityForResult()
     ) {result ->
         if (result.resultCode == RESULT_OK) {
-//            filePath= result.data?.extras?.getParcelable(MediaStore.EXTRA_OUTPUT)
-//            filePath?.let { uri ->
-//                anyPhoto = true
-//                Glide.with(this)
-//                    .load(uri)
-//                    .into(binding.imgHeader)
-//            }
-
             val myFile = File(currentPhotoPath)
             filePath = FileProvider.getUriForFile(
                 this,
@@ -195,12 +189,8 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
                 myFile
             )
             anyPhoto = true
-            Log.d("photo","launcher "+filePath.toString())
-            // Decode the file and set the image
             val resultBitmap = BitmapFactory.decodeFile(myFile.path)
             binding.imgHeader.setImageBitmap(resultBitmap)
-
-
         }
     }
     private val timeStamp: String = SimpleDateFormat(
@@ -229,13 +219,12 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
     }
 
     private fun send() {
-        var imageMultipart: MultipartBody.Part? = null
         when {
             title == "" -> {
                 Toast.makeText(this,"Judul tidak boleh kosong",Toast.LENGTH_SHORT).show()
             }
 
-            viewModel.tempThread == "" -> {
+            viewModel.tempThread.isEmpty()-> {
                 Toast.makeText(this,"Thread tidak boleh kosong",Toast.LENGTH_SHORT).show()
             }
 
@@ -246,21 +235,23 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
             viewModel.topics.value!!.isEmpty() -> {
                 Toast.makeText(this,"Pilih setidaknya satu topik",Toast.LENGTH_SHORT).show()
             }
-
             else -> {
+                var thread=Thread(viewModel.tempThread.toString(),viewModel.listImage.value)
+
                 var data:ForumPost?=null
                 uid?.let {
                     data=ForumPost(
                         "",
                         it,
                         title,
-                        viewModel.tempThread,
                         null,
                         DateConverter.getCurrentTimestamp(),
                         mutableListOf<String>(),
                         mutableListOf<String>(),
                         viewModel.topics.value!!.map { t ->t.topic_id },
-                        verified = if(it== ADMIN_ID)"content" else null
+                        verified = if(it== ADMIN_ID)"content" else null,
+                        null,
+                        thread
                     )
                 }
 
@@ -374,9 +365,9 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
         viewModel.topics.value = data.toSet()
     }
 
-    override fun handleDataThreadc(data: String) {
-        this.getWindow()
+    override fun handleDataThreadc(data: SpannableStringBuilder) {
+        this.window
             .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        binding.etThread.setText(data)
+        binding.etThread.setText(data.toString())
     }
 }
