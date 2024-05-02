@@ -20,7 +20,7 @@ interface ApiService {
     @POST("get")
     fun getSimilarity(
         @Body body:ChatRequest
-    ): Call<ChatBot>
+    ): Call<List<ChatBot>>
 
     companion object{
         const val KEY="AIzaSyBG8z7tfHAsk1wYSLTvsu9KHMdFBFpBncY"

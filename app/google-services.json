@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "149814705629",
+    "firebase_url": "https://efarm-20dbb-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "efarm-20dbb",
     "storage_bucket": "efarm-20dbb.appspot.com"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.efarm"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "149814705629-ujeoumfav9p2a95ioqq990q3othpr39q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.efarm",
+            "certificate_hash": "974c1b408207bbf8aa15db71ff9ef98ffc2e87f0"
+          }
+        },
+        {
+          "client_id": "149814705629-vfrkg8qc1th0j3p4f91jf0m4ev86qoq8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDYJqhdBCdwB0QCjrEsqeXg9flumqHYuUc"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "149814705629-vfrkg8qc1th0j3p4f91jf0m4ev86qoq8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

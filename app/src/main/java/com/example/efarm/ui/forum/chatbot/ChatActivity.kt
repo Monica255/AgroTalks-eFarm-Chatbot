@@ -83,6 +83,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         viewModel.getChats().observe(this@ChatActivity) {
+            Log.d("chat",it.toString())
             it?.let {
                 if (it.isNotEmpty()) {
                     chatAdapter.list = it.toMutableList()
@@ -94,7 +95,8 @@ class ChatActivity : AppCompatActivity() {
                     binding.etInputChat.isEnabled=true
                     sendInitialChat()
                 }
-            } ?: sendInitialChat().also { binding.etInputChat.isEnabled=true }
+            }
+//                ?: sendInitialChat().also { binding.etInputChat.isEnabled=true }
         }
 
         binding.btnClose.setOnClickListener {
@@ -117,16 +119,13 @@ class ChatActivity : AppCompatActivity() {
                     }
                     is Resource.Error ->{
                         showLoading(false)
-//                        it.message?.let{
-//                            Toast.makeText(this@ChatActivity,
-//                              it,Toast.LENGTH_SHORT).show()
-//                        }
                         getResponseChatbot(msg)
                     }
+
                     is Resource.Success ->{
                         it.data?.let {chatbot->
-                            if(chatbot.thread==null) showLoading(false)
-                            chatbot.thread?.let{thread->
+                            showLoading(true)
+                            chatbot[0].thread?.let{thread->
                                 lifecycleScope.launch {
                                     viewModel.getResponseChatbot(makePromt(msg,thread)).observe(this@ChatActivity){
                                         when(it){
@@ -134,7 +133,9 @@ class ChatActivity : AppCompatActivity() {
                                                 showLoading(false)
 
                                                 it.data?.let {
-                                                    val chat=Chat(null,ChatActor.BOT.printable,it.candidates[0].content.parts[0].text,System.currentTimeMillis(),chatbot)
+                                                    val chat=Chat(null,ChatActor.BOT.printable,it.candidates[0].content.parts[0].text,System.currentTimeMillis(),
+                                                        chatbot
+                                                    )
                                                     sendChat(chat)
                                                 }
                                             }
@@ -149,8 +150,6 @@ class ChatActivity : AppCompatActivity() {
                                         }
                                     }
                                 }
-//                                val chat=Chat(null,ChatActor.BOT.printable,thread,System.currentTimeMillis(),chatbot)
-//                                sendChat(chat)
                             }
                         }
                     }

@@ -113,6 +113,21 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cb_show_pass" />
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/bt_masuk_google"
+                    style="@style/SubSubHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_start_end"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="@dimen/margin_start_end"
+                    android:background="@drawable/bg_login_google"
+                    android:text="Masuk dengan Google"
+                    android:textAllCaps="false"
+                    android:textColor="@color/green"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/bt_masuk" />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>

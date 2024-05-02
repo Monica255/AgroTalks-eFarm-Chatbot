@@ -12,6 +12,6 @@ interface IChatbotRepository {
     fun getChats(): MutableLiveData<List<Chat>?>
     suspend fun getResponseChatbot(msg: String): Flow<Resource<ResponseChatbot>>
 
-    suspend fun getThreadChatbot(text: String): Flow<Resource<ChatBot>>
+    suspend fun getThreadChatbot(text: String): Flow<Resource<List<ChatBot>>>
 
 }

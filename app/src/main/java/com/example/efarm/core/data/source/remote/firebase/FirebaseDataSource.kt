@@ -18,9 +18,12 @@ import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.data.source.remote.model.UserData
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.VoteType
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -54,8 +57,6 @@ class FirebaseDataSource @Inject constructor(
     firebaseFirestore: FirebaseFirestore,
     @ApplicationContext private val context: Context
 ) {
-//    val currentUser: FirebaseUser?=FirebaseAuth.getInstance().currentUser
-
     private val storageUserRef = firebaseStorage.reference.child("thread_headers")
     private val userDataRef = firebaseDatabase.reference.child("user_data/")
     private val chatsRef = firebaseDatabase.reference.child("chats/")
@@ -176,7 +177,7 @@ class FirebaseDataSource @Inject constructor(
                                 Log.d("TAG", e.message.toString())
                             }
                         } else {
-                            chats.value = null
+                            chats.value = listOf()
                         }
                     }
 
@@ -199,7 +200,7 @@ class FirebaseDataSource @Inject constructor(
         x?.let { id ->
             chatsRef.child(id).child(key!!).setValue(data2).addOnCompleteListener {
                 if (it.isSuccessful) {
-                    if (data.thread != null) {
+                    if (!data.thread.isNullOrEmpty()) {
                         chatsRef.child(id).child(key).child("thread").setValue(data.thread)
                             .addOnCompleteListener {
                                 if (it.isSuccessful) {
@@ -335,6 +336,12 @@ class FirebaseDataSource @Inject constructor(
 
     fun signOut() {
         if (FirebaseAuth.getInstance().currentUser != null) {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.resources.getString(R.string.default_web_client_id_2))
+                .requestEmail()
+                .build()
+            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            googleSignInClient.signOut()
             firebaseAuth.signOut()
         }
     }
@@ -614,49 +621,87 @@ class FirebaseDataSource @Inject constructor(
             }
         }
     }
+    suspend fun firebaseAuthWithGoogle(idToken: String): Flow<Resource<String>> {
+        return flow {
+            try {
+                emit(Resource.Loading())
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                val result = firebaseAuth.signInWithCredential(credential).await()
+                result?.let {
+                    if (result.user != null) {
+                        Log.d("signin","success sign in")
+                        val x = setUserData()
+                        emit(Resource.Success(x.second))
+                    } else {
+                        Log.d("signin","error sign in")
+                        emit(Resource.Error<String>("Error"))
+                    }
+                } ?: emit(Resource.Error<String>("Error"))
 
+            } catch (e: Exception) {
+
+                emit(Resource.Error(e.toString()))
+                Log.e("signin", "cc "+e.toString())
+            }
+
+        }.flowOn(Dispatchers.IO)
+    }
     suspend fun uploadThread(data: ForumPost, file: Uri?): Flow<Resource<String>> {
         val key = forumRef.document().id
-        data.id_forum_post = key
+        if(data.id_forum_post=="") data.id_forum_post = key
+
         val listImages = mutableListOf<Images>()
         return flow {
             try {
                 emit(Resource.Loading())
                 if (file != null && file.path != null) {
                     val mFile = File(file.path)
-                    val r = storageUserRef.child(key).child(mFile.name).putFile(file).await()
-                    if (r != null && r.task.isSuccessful) {
-                        val uri = storageUserRef.child(key).child(mFile.name).downloadUrl.await()
-                        if (uri != null) data.img_header = uri.toString()
-                    } else {
-                        emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                    Log.d("edit",mFile.name)
+                    try {
+                        val r = storageUserRef.child(data.id_forum_post).child(data.id_forum_post).putFile(file).await()
+                        Log.d("edit","aaa")
+                        if (r != null && r.task.isSuccessful) {
+                            val uri = storageUserRef.child(data.id_forum_post).child(data.id_forum_post).downloadUrl.await()
+                            if (uri != null) data.img_header = uri.toString()
+                        } else {
+                            emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                        }
+                    }catch (e:Exception){
+                        data.img_header = file.toString()
+                        Log.d("edit","xxx")
+                        //image already exist
                     }
+
                 }
                 data.thread?.images?.forEachIndexed { index, it ->
                     it.image?.let {img->
                         val mFile = File(img.toUri().path)
-                        val r = storageUserRef.child(key).child(mFile.name).putFile(img.toUri()).await()
-                        if (r != null && r.task.isSuccessful) {
-                            val uri = storageUserRef.child(key).child(mFile.name).downloadUrl.await()
-                            if (uri != null) listImages.add(index,Images(it.position,uri.toString()))
-                        } else {
-                            emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                        Log.d("edit",mFile.name)
+                        try {
+                            val r = storageUserRef.child(data.id_forum_post).child(mFile.name).putFile(img.toUri()).await()
+                            if (r != null && r.task.isSuccessful) {
+                                val uri = storageUserRef.child(data.id_forum_post).child(mFile.name).downloadUrl.await()
+                                if (uri != null) listImages.add(index,Images(it.position,uri.toString()))
+                            } else {
+                                emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                            }
+                        }catch (e:Exception){
+                            //image already exist
+                            listImages.add(index,Images(it.position,img))
                         }
                     }
                 }
                 data.thread?.images=listImages
-//            else {
                 val setResult = suspendCoroutine<Task<Void>> { continuation ->
-                    forumRef.document(key).set(data).addOnCompleteListener { task ->
+                    forumRef.document(data.id_forum_post).set(data).addOnCompleteListener { task ->
                         continuation.resume(task)
                     }
                 }
-
                 if (setResult.isSuccessful) {
                     emit(Resource.Success("Berhasil membagikan"))
                 }
-//            }
             } catch (e: Exception) {
+                Log.d("edit","edit "+e.message.toString())
                 emit(Resource.Error("Photo: " + e.message.toString()))
             }
         }

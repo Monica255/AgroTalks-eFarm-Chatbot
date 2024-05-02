@@ -47,4 +47,6 @@
     <string name="hapus">Hapus</string>
     <string name="yakin_ingin_hapus">Yakin ingin menghapus postingan ini?</string>
     <string name="tambah_gambar">+ tambah gambar(%1$s/5)</string>
+    <string name="edit_postingan">Edit Postingan</string>
+    <string name="default_web_client_id_2">149814705629-vfrkg8qc1th0j3p4f91jf0m4ev86qoq8.apps.googleusercontent.com</string>
 </resources>

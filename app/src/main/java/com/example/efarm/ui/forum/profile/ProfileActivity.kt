@@ -2,9 +2,9 @@ package com.example.efarm.ui.forum.profile
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +23,7 @@ import com.example.efarm.core.util.ViewEventsForumPost
 import com.example.efarm.ui.forum.ForumViewModel
 import com.example.efarm.ui.forum.PagingForumAdapter
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
+import com.example.efarm.ui.forum.upload.MakePostActivity
 import com.example.efarm.ui.loginsignup.LoginSignupActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -39,6 +40,12 @@ class ProfileActivity : AppCompatActivity() {
         intent.putExtra(FORUM_POST_ID, post.id_forum_post)
         startActivity(intent)
 
+    }
+    private val onEdit: ((String)->Unit) ={post->
+        val intent = Intent(this, MakePostActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.putExtra(FORUM_POST_ID,post)
+        launcherRefresh.launch(intent)
     }
 
     private val onDelete: ((ForumPost)->Unit) ={post->
@@ -71,6 +78,14 @@ class ProfileActivity : AppCompatActivity() {
             }
         }
     }
+    private val launcherRefresh = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {result ->
+        if (result.resultCode == RESULT_OK) {
+            viewModel.getData()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding =  ActivityProfileBinding.inflate(layoutInflater)
@@ -90,7 +105,7 @@ class ProfileActivity : AppCompatActivity() {
 
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost
-        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,onDelete,viewModel,this@ProfileActivity)
+        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,onDelete,onEdit,viewModel,this@ProfileActivity)
 
         binding.rvForumPost.adapter = adapterForum
 

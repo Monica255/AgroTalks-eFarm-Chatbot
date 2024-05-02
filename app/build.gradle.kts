@@ -5,13 +5,8 @@ plugins {
     id ("kotlin-kapt")
     id("com.google.devtools.ksp") version "1.8.10-1.0.9" apply false
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-    id("com.google.gms.google-services")
-
-//    id("com.android.application") version "8.1.0" apply false
-//    id("com.android.library") version "8.1.0" apply false
-//    id("org.jetbrains.kotlin.android") version "1.5.31" apply false
-
     id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -66,40 +61,7 @@ android {
 dependencies {
     implementation("androidx.test.espresso:espresso-intents:3.4.0")
     implementation("androidx.activity:activity:1.8.0")
-//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
-//    implementation("androidx.test.espresso:espresso-contrib:3.3.0")
-//    androidTestImplementation ("com.android.support.test.espresso:espresso-contrib:3.0.2")
-//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
     androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
-//    implementation ("androidx.work:work-runtime-ktx:2.7.0")
-//    implementation("androidx.test.espresso:espresso-contrib:3.5.1") {
-//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
-//    }
-//    implementation("com.google.protobuf:protobuf-lite:3.0.1") {
-//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-//    }
-    //    implementation("androidx.test.espresso:espresso-intents:3.5.1")
-//    implementation("androidx.test.espresso:espresso-contrib:3.5.1")
-//    implementation("androidx.test.ext:junit-ktx:1.1.5")
-//    androidTestImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
-//    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
-//    implementation("com.google.protobuf:protobuf-lite:3.0.1")
-
-//    implementation("com.google.firebase:firebase-config:19.1.0") {
-//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
-//    }
-
-//    implementation("com.google.protobuf:protobuf-javalite:3.19.2") {
-//        exclude(group = "com.google.protobuf", module = "protobuf-java")
-//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-//        exclude(group = "com.google.protobuf", module = "protobuf-lite")
-//    }
-//    implementation("com.google.protobuf:protobuf-lite:3.0.1") {
-////        exclude(group = "com.google.protobuf", module = "protobuf-java")
-//        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-////        exclude(group = "com.google.protobuf", module = "protobuf-lite")
-//    }
 
     // Versions
     val kotlin_version = "1.7.0"
@@ -178,4 +140,9 @@ dependencies {
     api ("org.apache.poi:poi:5.2.5")
     api ("org.apache.poi:poi-ooxml:5.2.5")
 
+    // Markdown
+    implementation ("io.noties.markwon:core:4.0.0")
+    implementation ("com.google.android.gms:play-services-auth:19.2.0")
 }
+
+

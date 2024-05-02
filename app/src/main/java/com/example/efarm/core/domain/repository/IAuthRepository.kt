@@ -19,4 +19,6 @@ interface IAuthRepository {
     fun getUserData(uid:String?): MutableLiveData<UserData?>
 
     fun signOut()
+
+    suspend fun firebaseAuthWithGoogle(idToken: String): Flow<Resource<String>>
 }

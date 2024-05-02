@@ -28,4 +28,6 @@ class AuthRepository @Inject constructor(
         firebaseDataSource.signOut()
     }
 
+    override suspend fun firebaseAuthWithGoogle(idToken: String)= firebaseDataSource.firebaseAuthWithGoogle(idToken)
+
 }

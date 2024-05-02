@@ -24,4 +24,6 @@ class AuthInteractor@Inject constructor(private val repo: IAuthRepository):AuthU
         repo.signOut()
     }
 
+    override suspend fun firebaseAuthWithGoogle(idToken: String): Flow<Resource<String>> = repo.firebaseAuthWithGoogle(idToken)
+
 }

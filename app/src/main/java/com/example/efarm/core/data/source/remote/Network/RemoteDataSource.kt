@@ -28,7 +28,7 @@ class RemoteDataSource @Inject constructor(
     @CustomBaseUrl private val customApiService: ApiService
 ) {
 
-    suspend fun getChatThread(text: String): Flow<Resource<ChatBot>> = flow {
+    suspend fun getChatThread(text: String): Flow<Resource<List<ChatBot>>> = flow {
         val req = ChatRequest(text)
         emit(Resource.Loading())
         val call = customApiService.getSimilarity(req)
@@ -37,14 +37,17 @@ class RemoteDataSource @Inject constructor(
             val response = call.await()
             if (response.isSuccessful) {
                 val success = response.body()
-                success?.confidence?.let {
-                    if (success.confidence.toFloat() >= 0.8) {
-                        emit(Resource.Success(response.body()!!))
-                    } else {
-                        emit(Resource.Error("Empty response"))
+                if(!success.isNullOrEmpty()){
+                    success[0].confidence?.let {
+                        if (it >= 0.8) {
+                            emit(Resource.Success(response.body()!!))
+                        } else {
+                            emit(Resource.Error("Empty response"))
+                        }
                     }
+                }else{
+                    emit(Resource.Error("Empty response"))
                 }
-
             } else {
                 emit(Resource.Error("Unsuccessful response: ${response.code()}"))
             }
@@ -59,7 +62,7 @@ class RemoteDataSource @Inject constructor(
                 Content(
                     parts = listOf(
                         Part(
-                            text = preProcess(msg)
+                            text = getAnswer(msg)
                         )
                     )
                 )
@@ -84,10 +87,10 @@ class RemoteDataSource @Inject constructor(
             emit(Resource.Error("Error processing response: ${e.message}"))
         }
     }
-
-    private fun preProcess(msg: String):String{
-        return msg + """\n
-            Response using Indonesia language with maximum $NUM_WORDS words!
+    private fun getAnswer(msg: String):String{
+        return "Question: "+msg + """\n
+            Response briefly using Indonesia language with maximum $NUM_WORDS words and minimum 1 word in markdown format! 
+            ONLY if the question is related to agricultural information, attach APA bibliography reference
         """.trimIndent()
     }
     private suspend fun <T : Any> Call<T>.await(): Response<T> {

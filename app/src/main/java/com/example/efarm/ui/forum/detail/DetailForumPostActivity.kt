@@ -1,13 +1,11 @@
 package com.example.efarm.ui.forum.detail
 
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
-import android.text.style.BackgroundColorSpan
 import android.text.style.ImageSpan
 import android.util.Log
 import android.view.View
@@ -21,30 +19,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivityDetailForumPostBinding
-import com.example.eFarm.databinding.FragmentThreadBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.util.DateConverter
-import com.example.efarm.core.util.END_IDX
 import com.example.efarm.core.util.FORUM_POST_ID
-import com.example.efarm.core.util.START_IDX
 import com.example.efarm.core.util.TextFormater
 import com.example.efarm.core.util.ViewEventsVoteComment
 import com.example.efarm.core.util.VoteType
 import com.example.efarm.ui.forum.FilterTopicAdapter
 import com.example.efarm.ui.forum.ForumViewModel
-import com.example.efarm.ui.forum.upload.ThreadFragment
-import com.example.efarm.ui.forum.upload.helper
+import com.example.efarm.ui.forum.upload.Helper
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
-import java.util.concurrent.CountDownLatch
 
 @AndroidEntryPoint
 class DetailForumPostActivity : AppCompatActivity() {
@@ -57,10 +49,9 @@ class DetailForumPostActivity : AppCompatActivity() {
     private var tempPost: CommentForumPost? = null
     lateinit var image: Drawable
     val textSpan = SpannableStringBuilder()
-
     val downloadImageTask =
-        helper.Companion.DownloadImageTask(object :
-            helper.Companion.DownloadImageTask.OnImageDownloadedListener {
+        Helper.Companion.DownloadImageTask(object :
+            Helper.Companion.DownloadImageTask.OnImageDownloadedListener {
             override fun onImageDownloaded(drawable: List<Pair<Drawable?, Int>?>?) {
                 val maxWidth =
                     binding.tvContentPost.width - binding.tvContentPost.paddingStart - binding.tvContentPost.paddingEnd
@@ -83,7 +74,6 @@ class DetailForumPostActivity : AppCompatActivity() {
                                     }
                                     val imageSpan =
                                         image?.let { it1 -> ImageSpan(it1, ImageSpan.ALIGN_BOTTOM) }
-                                    Log.d("detail", img.second.toString())
 //                                    textSpan.insert(img.second, "\n \n")
                                     textSpan.setSpan(
                                         imageSpan, img.second + 1, img.second + 2,
@@ -97,9 +87,10 @@ class DetailForumPostActivity : AppCompatActivity() {
                         }
                     }
                     binding.tvContentPost.text = textSpan
+                    showLoading(false)
                 }
             }
-        })
+        },this)
 
 
     private val onCheckChanged: ((CommentForumPost, VoteType) -> Unit) = { post, votetype ->
@@ -155,12 +146,20 @@ class DetailForumPostActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.customaView.setOnClickListener {
+//            binding.customaView.onClick()
+        }
+
         val id = intent.getStringExtra(FORUM_POST_ID)
         id?.let {
             viewModel.getDetailForum(it).observe(this) {
                 when (it) {
-                    is Resource.Loading -> {}
-                    is Resource.Error -> {}
+                    is Resource.Loading -> {
+                        showLoading(true)
+                    }
+                    is Resource.Error -> {
+                        showLoading(false)
+                    }
                     is Resource.Success -> {
                         it.data?.let {
                             setData(it)
@@ -178,6 +177,7 @@ class DetailForumPostActivity : AppCompatActivity() {
                 binding.tvUserName.text = it.name
                 Glide.with(this)
                     .load(it.img_profile)
+                    .error(R.drawable.cracked_img)
                     .placeholder(R.drawable.placeholder)
                     .into(binding.imgProfilePicture)
             }
@@ -192,16 +192,15 @@ class DetailForumPostActivity : AppCompatActivity() {
             binding.cbLike.isChecked = false
         }
 
-        if (data.img_header == null || data.img_header == "") {
-            binding.imgHeaderPost.visibility = View.GONE
+        if (data.img_header == null || data.img_header == "" ) {
+            binding.customaView.visibility = View.GONE
         } else {
-            Glide.with(this)
-                .load(data.img_header)
-                .placeholder(R.drawable.placeholder)
-                .into(binding.imgHeaderPost)
-            binding.imgHeaderPost.visibility = View.VISIBLE
+            binding.customaView.showMedia(data.img_header!!)
         }
 
+//        binding.vvHeader.setOnClickListener {
+//            binding.vvHeader.start()
+//        }
 
         binding.tvTimastamp.text = TextFormater.toPostTime(data.timestamp, this)
 
@@ -296,6 +295,40 @@ class DetailForumPostActivity : AppCompatActivity() {
             }
         }
     }
+//    private fun showMedia(filePath:String){
+//        val type=filePath.split("/")
+//        if (filePath != null) {
+//            if(!displayMedia(type.last(),filePath)){
+//                val storage = FirebaseStorage.getInstance()
+//                val storageRef = storage.getReferenceFromUrl(filePath.toString())
+//                storageRef.metadata.addOnSuccessListener { storageMetadata ->
+//                    val contentType = storageMetadata.contentType
+//                    displayMedia(contentType,filePath)
+//                }.addOnFailureListener { e ->
+//                    e.printStackTrace()
+//                }
+//            }
+//        }
+//    }
+//
+//    private fun displayMedia(contentType:String?,filePath: String):Boolean{
+//        if (contentType != null && contentType.startsWith("image")) {
+//            binding.vvHeader.visibility=View.GONE
+//            binding.imgHeader.visibility=View.VISIBLE
+//            Glide.with(this)
+//                .load(filePath)
+//                .error(R.drawable.cracked_img)
+//                .placeholder(R.drawable.placeholder_img)
+//                .into(binding.imgHeader)
+//            return true
+//        } else if (contentType != null && contentType.startsWith("video")) {
+//            binding.vvHeader.visibility = View.VISIBLE
+//            binding.imgHeader.visibility = View.GONE
+//            binding.vvHeader.setVideoPath(filePath.toString())
+//            binding.vvHeader.start()
+//            return true
+//        }else return false
+//    }
 
     private fun getComments(data: ForumPost) {
         lifecycleScope.launch {

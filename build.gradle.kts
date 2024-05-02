@@ -9,7 +9,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath ("com.google.gms:google-services:4.3.14")
+        classpath ("com.google.gms:google-services:4.3.10")
+        classpath ("com.google.android.gms:play-services-auth:19.2.0")
         classpath ("com.google.dagger:hilt-android-gradle-plugin:$hilt_version")
         classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.0") // Use the latest version
         classpath ("com.android.tools.build:gradle:7.0.0") // Use the latest version

@@ -13,6 +13,7 @@ import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivitySplashBinding
 import com.example.efarm.ui.forum.HomeForumActivity
 import com.example.efarm.ui.loginsignup.LoginSignupActivity
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 

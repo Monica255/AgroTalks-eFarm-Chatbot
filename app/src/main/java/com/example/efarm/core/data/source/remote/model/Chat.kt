@@ -5,7 +5,7 @@ data class Chat(
     val actor:String="bot",
     val message: String="",
     val timestamp: Long=0,
-    val thread: ChatBot?=null
+    val thread: List<ChatBot>?=null
 )
 
 

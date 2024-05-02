@@ -32,6 +32,7 @@ class PagingForumAdapter(
     private val onClick: ((ForumPost) -> Unit),
     private val onCheckChanged: ((ForumPost) -> Unit),
     private val onDelete: ((ForumPost)->Unit),
+    private val onEdit: ((String)->Unit),
     private val viewModel: ForumViewModel,
     private val context: LifecycleOwner
 ) : PagingDataAdapter<ForumPost, PagingForumAdapter.ForumVH>(Companion) {
@@ -41,7 +42,6 @@ class PagingForumAdapter(
         RecyclerView.ViewHolder(binding.root) {
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(post: ForumPost) {
-            Log.d("TAG",post.toString())
             binding.tvPostTitle.text = post.title
             binding.tvPostContent.text = post.thread?.thread?.trim()
             binding.tvLikeCount.text = TextFormater.formatLikeCounts(post.likes?.size?:0)
@@ -102,22 +102,31 @@ class PagingForumAdapter(
                     }, 250)
             }
 
-            if (post.img_header != null&&post.img_header?.trim()!="") {
+            if (post.img_header == null||post.img_header?.trim()=="") {
+                binding.imgHeaderPost.visibility = View.GONE
+            } else {
                 binding.imgHeaderPost.visibility = View.VISIBLE
                 Glide.with(itemView)
                     .load(post.img_header)
+                    .error(R.drawable.cracked_img)
                     .placeholder(R.drawable.placeholder)
                     .into(binding.imgHeaderPost)
-            } else {
-                binding.imgHeaderPost.visibility = View.GONE
             }
 
-            binding.tvDelete.setOnClickListener {
+            binding.btnDelete.setOnClickListener {
                 onDelete.invoke(post)
+            }
+
+            binding.btnEdit.setOnClickListener {
+
             }
 
             binding.cbLike.setOnClickListener {
                 doLike(Unit)
+            }
+
+            binding.btnEdit.setOnClickListener {
+                onEdit.invoke(post.id_forum_post)
             }
         }
     }

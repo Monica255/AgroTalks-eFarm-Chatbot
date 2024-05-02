@@ -1,10 +1,8 @@
 package com.example.efarm.ui.forum
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -14,7 +12,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivityHomeForumBinding
 import com.example.efarm.core.data.Resource
@@ -29,12 +26,9 @@ import com.example.efarm.ui.forum.chatbot.ChatActivity
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
 import com.example.efarm.ui.forum.profile.ProfileActivity
 import com.example.efarm.ui.forum.upload.MakePostActivity
-import com.example.efarm.ui.loginsignup.LoginSignupActivity
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.File
 
 interface OnGetDataTopic {
     fun handleDataTopic(data: Topic?)
@@ -55,6 +49,13 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
     private val onDelete: ((ForumPost)->Unit) ={post->
         showConfirmDialogDelete(post)
+    }
+
+    private val onEdit: ((String)->Unit) ={post->
+        val intent = Intent(this, MakePostActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.putExtra(FORUM_POST_ID,post)
+        launcherRefresh.launch(intent)
     }
 
     private val onCheckChanged: ((ForumPost) -> Unit) = { post ->
@@ -93,7 +94,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         }
     }
 
-    private val launcherProfile = registerForActivityResult(
+    private val launcherRefresh = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {result ->
         Log.d("TAG",result.resultCode.toString())
@@ -101,6 +102,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             viewModel.getData()
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeForumBinding.inflate(layoutInflater)
@@ -113,7 +115,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
         val layoutManagerForumPost = LinearLayoutManager(this)
         binding.rvForumPost.layoutManager = layoutManagerForumPost
-        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,onDelete,viewModel,this)
+        adapterForum = PagingForumAdapter(onCLick,onCheckChanged,onDelete,onEdit,viewModel,this)
 
         binding.rvForumPost.adapter = adapterForum
 
@@ -137,7 +139,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         binding.btnProfile.setOnClickListener{
             val intent = Intent(this, ProfileActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            launcherProfile.launch(intent)
+            launcherRefresh.launch(intent)
         }
 
         binding.swipeRefresh.setOnRefreshListener {

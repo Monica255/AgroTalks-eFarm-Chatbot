@@ -1,16 +1,17 @@
 package com.example.efarm.ui.forum.upload
 
-import android.content.Intent.ACTION_GET_CONTENT
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -21,9 +22,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.eFarm.R
@@ -34,23 +34,17 @@ import com.example.efarm.core.data.source.remote.model.Thread
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.ADMIN_ID
 import com.example.efarm.core.util.DateConverter
+import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.ui.forum.FilterTopicAdapter
-import com.example.efarm.ui.forum.ForumTopicFragment
+import com.example.efarm.ui.forum.ForumViewModel
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -58,10 +52,11 @@ import java.util.Locale
 class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
     lateinit var binding: ActivityMakePostBinding
     private var title = ""
+    private var id: String = ""
     private lateinit var adapterTopic: FilterTopicAdapter
     private val viewModel: MakePostViewModel by viewModels()
+    private val viewModelForum: ForumViewModel by viewModels()
     var uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-//    private var getFile: File? = null
     private var filePath: Uri? = null
 
     companion object {
@@ -72,8 +67,24 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
         super.onCreate(savedInstanceState)
         binding = ActivityMakePostBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setActionBar()
-        binding.imgHeader.setOnClickListener {
+        setActionBar(resources.getString(R.string.buat_postingan))
+        id = intent.getStringExtra(FORUM_POST_ID) ?: ""
+        if(id!=""&&id!=null) {
+            setActionBar(resources.getString(R.string.edit_postingan))
+            viewModelForum.getDetailForum(id).observe(this) {
+                when (it) {
+                    is Resource.Loading -> {}
+                    is Resource.Error -> {}
+                    is Resource.Success -> {
+                        it.data?.let {
+                            setData(it)
+                        }
+                    }
+                }
+            }
+        }
+
+        binding.customaView.setOnClickListener {
             select()
         }
         binding.etTitle.addTextChangedListener {
@@ -103,6 +114,10 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
             adapterTopic.submitList(it.toMutableList())
         }
 
+        viewModel.isLoadData.observe(this) {
+            showLoading(it)
+        }
+
         lifecycleScope.launch {
             viewModel.getListTopik(KategoriTopik.SEMUA).observe(this@MakePostActivity) {
                 when (it) {
@@ -116,10 +131,10 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
                         }
 
                         it.data?.toMutableList()?.let { it1 ->
-                            val common=it1.filter { it.topic_category.trim()=="common topics"  }
-                            val commodity= it1.filter { it.topic_category.trim()=="commodity" }
+                            val common = it1.filter { it.topic_category.trim() == "common topics" }
+                            val commodity = it1.filter { it.topic_category.trim() == "commodity" }
                             viewModel.topicsCommon.value = common.toMutableList()
-                            viewModel.topicsCommodity.value=commodity.toMutableList()
+                            viewModel.topicsCommodity.value = commodity.toMutableList()
                         }
                     }
 
@@ -137,50 +152,31 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
         }
     }
 
-//    private fun uriToFile(selectedImg: Uri, context: Context): File {
-//        val contentResolver: ContentResolver = context.contentResolver
-//        val myFile = createCustomTempFile(context)
-//
-//        val inputStream = contentResolver.openInputStream(selectedImg) as InputStream
-//        val outputStream: OutputStream = FileOutputStream(myFile)
-//        val buf = ByteArray(1024)
-//        var len: Int
-//        while (inputStream.read(buf).also { len = it } > 0) outputStream.write(buf, 0, len)
-//        outputStream.close()
-//        inputStream.close()
-//
-//        return myFile
-//    }
-
     private val launcherIntentGallery = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             filePath = result.data?.data as Uri
-            if (filePath != null) {
-                anyPhoto=true
-//                val temp: Uri = filePath!!
-//                val myFile = uriToFile(temp, this)
-//                getFile = myFile
-                binding.imgHeader.setImageURI(filePath)
-
-            }
+            filePath?.let { binding.customaView.showMedia(it.toString()) }
         }
     }
 
+
     private fun startGallery() {
-        val intent = Intent()
-        intent.action = ACTION_GET_CONTENT
-        intent.type = "image/*"
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/* video/*" // Accepts both images and videos
+        intent.putExtra(
+            Intent.EXTRA_MIME_TYPES,
+            arrayOf("image/*", "video/*")
+        ) // Explicitly specify MIME types
         val chooser = Intent.createChooser(intent, getString(R.string.choose_picture))
         launcherIntentGallery.launch(chooser)
     }
 
-    private var anyPhoto = false
     private var currentPhotoPath: String? = null
     private val launcherIntentCamera = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {result ->
+    ) { result ->
         if (result.resultCode == RESULT_OK) {
             val myFile = File(currentPhotoPath)
             filePath = FileProvider.getUriForFile(
@@ -188,9 +184,9 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
                 getString(R.string.package_name),
                 myFile
             )
-            anyPhoto = true
-            val resultBitmap = BitmapFactory.decodeFile(myFile.path)
-            binding.imgHeader.setImageBitmap(resultBitmap)
+            binding.customaView.showMedia(currentPhotoPath.toString())
+        }else{
+            binding.customaView.start()
         }
     }
     private val timeStamp: String = SimpleDateFormat(
@@ -221,64 +217,76 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
     private fun send() {
         when {
             title == "" -> {
-                Toast.makeText(this,"Judul tidak boleh kosong",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Judul tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
 
-            viewModel.tempThread.isEmpty()-> {
-                Toast.makeText(this,"Thread tidak boleh kosong",Toast.LENGTH_SHORT).show()
+            viewModel.tempThread.isEmpty() -> {
+                Toast.makeText(this, "Thread tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
 
             viewModel.topics.value == null -> {
-                Toast.makeText(this,"Pilih setidaknya satu topik",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Pilih setidaknya satu topik", Toast.LENGTH_SHORT).show()
             }
 
             viewModel.topics.value!!.isEmpty() -> {
-                Toast.makeText(this,"Pilih setidaknya satu topik",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Pilih setidaknya satu topik", Toast.LENGTH_SHORT).show()
             }
-            else -> {
-                var thread=Thread(viewModel.tempThread.toString(),viewModel.listImage.value)
 
-                var data:ForumPost?=null
+            else -> {
+                var thread = Thread(viewModel.tempThread.toString(), viewModel.listImage.value)
+
+                var data: ForumPost? = null
                 uid?.let {
-                    data=ForumPost(
-                        "",
+                    data = ForumPost(
+                        id,
                         it,
                         title,
-                        null,
+                        if (filePath != null) filePath.toString() else null,
                         DateConverter.getCurrentTimestamp(),
                         mutableListOf<String>(),
                         mutableListOf<String>(),
-                        viewModel.topics.value!!.map { t ->t.topic_id },
-                        verified = if(it== ADMIN_ID)"content" else null,
+                        viewModel.topics.value!!.map { t -> t.topic_id },
+                        verified = if (it == ADMIN_ID) "content" else null,
                         null,
                         thread
                     )
                 }
 
-                data?.let{data->
+                data?.let { data ->
                     lifecycleScope.launch {
-                        viewModel.uploadThread(data,if(anyPhoto)filePath else null).observe(this@MakePostActivity){
-                            when(it){
-                                is Resource.Error->{
-                                    showLoading(false)
-                                    it.message?.let{
-                                        Toast.makeText(this@MakePostActivity,it,Toast.LENGTH_SHORT).show()
+                        viewModel.uploadThread(data, if (filePath != null) filePath else null)
+                            .observe(this@MakePostActivity) {
+                                when (it) {
+                                    is Resource.Error -> {
+                                        showLoading(false)
+                                        it.message?.let {
+                                            Toast.makeText(
+                                                this@MakePostActivity,
+                                                it,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
-                                }
-                                is Resource.Success->{
-                                    showLoading(false)
-                                    it.data?.let{
-                                        Toast.makeText(this@MakePostActivity,it,Toast.LENGTH_SHORT).show()
-                                        setResult(RESULT_OK)
-                                        finish()
-                                    }
-                                }
-                                is Resource.Loading->{
-                                    showLoading(true)
-                                }
-                            }
 
-                        }
+                                    is Resource.Success -> {
+                                        showLoading(false)
+                                        it.data?.let {
+                                            Toast.makeText(
+                                                this@MakePostActivity,
+                                                it,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            setResult(RESULT_OK)
+                                            finish()
+                                        }
+                                    }
+
+                                    is Resource.Loading -> {
+                                        showLoading(true)
+                                    }
+                                }
+
+                            }
 
                     }
                 }
@@ -315,50 +323,130 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
             this
         )
         builder.setCustomTitle(title)
-        val mItems = if (anyPhoto) items2 else items
+        val mItems = if (filePath != null) items2 else items
         builder.setItems(mItems) { dialog, item ->
             when {
                 mItems[item] == getString(R.string.from_galeri) -> {
                     startGallery()
-
                 }
 
                 mItems[item] == getString(R.string.take_picture) -> {
                     startTakePhoto()
-
                 }
 
                 mItems[item] == getString(R.string.delete_image) -> {
-//                    Log.d("HEADER", getFile.toString())
                     filePath = null
                     currentPhotoPath = null
-                    anyPhoto = false
-                    Glide.with(this)
-                        .load(R.drawable.placeholder_img)
-                        .placeholder(R.drawable.placeholder_img)
-                        .into(binding.imgHeader)
+                    binding.customaView.showPlaceHolder(R.drawable.placeholder_img)
                     dialog.dismiss()
                 }
 
                 mItems[item] == getString(R.string.cancel) -> {
                     dialog.dismiss()
                 }
-
-
             }
         }
         builder.show()
     }
+
+    val span = SpannableStringBuilder()
+    private fun setData(forumPost: ForumPost) {
+        viewModel.isLoadData.value = true
+        title = forumPost.title
+        filePath = forumPost.img_header?.toUri()
+        Log.d("edit", filePath.toString())
+        span.append(forumPost.thread?.thread)
+        viewModel.tempThread = span
+        forumPost.thread?.images?.let { imgs ->
+            viewModel.listImage.value = imgs
+            downloadImageTask.execute(imgs.toList())
+        }
+
+        viewModel.topicsCommodity.observe(this@MakePostActivity) { commodity ->
+            viewModel.topicsCommon.observe(this@MakePostActivity) { common ->
+                if (commodity != null && commodity.isNotEmpty() && common != null && common.isNotEmpty()) {
+                    var data2 = setOf<Topic>()
+                    forumPost.topics?.map { id ->
+                        var data = mutableListOf<Topic>()
+                        val sdata = viewModel.topicsCommodity.value?.filter { it.topic_id == id }
+                        sdata?.let { data.addAll(it) }
+                        val fdata = viewModel.topicsCommon.value?.filter { it.topic_id == id }
+                        fdata?.let { data.addAll(it) }
+                        data2 = data.toSet()
+
+                    }
+                    viewModel.topics.value = data2
+                }
+            }
+        }
+
+        binding.apply {
+            if (filePath != null) {
+                binding.customaView.showMedia(filePath.toString())
+            } else {
+                binding.customaView.showPlaceHolder(R.drawable.placeholder_img)
+            }
+
+            etTitle.setText(title)
+            etThread.text = span
+        }
+    }
+
+    lateinit var image: Drawable
+    val downloadImageTask =
+        Helper.Companion.DownloadImageTask(object :
+            Helper.Companion.DownloadImageTask.OnImageDownloadedListener {
+
+            override fun onImageDownloaded(drawable: List<Pair<Drawable?, Int>?>?) {
+                val maxWidth =
+                    binding.etThread.width - 74
+                drawable?.let { pair ->
+                    pair.forEach {
+                        it?.let { img ->
+                            img?.first?.let {
+                                image = it
+                                image?.let {
+                                    val drawableWidth = image.intrinsicWidth
+                                    val drawableHeight = image.intrinsicHeight
+                                    if (drawableHeight <= drawableWidth) {
+                                        val scaledHeight =
+                                            (maxWidth.toFloat() / drawableWidth.toFloat() * drawableHeight.toFloat()).toInt()
+                                        image?.setBounds(0, 0, maxWidth, scaledHeight)
+                                    } else {
+                                        val scaledWidth =
+                                            (maxWidth.toFloat() / drawableHeight.toFloat() * drawableWidth.toFloat()).toInt()
+                                        image?.setBounds(0, 0, scaledWidth, maxWidth)
+                                    }
+                                    val imageSpan =
+                                        image?.let { it1 -> ImageSpan(it1, ImageSpan.ALIGN_BOTTOM) }
+                                    span.setSpan(
+                                        imageSpan, img.second + 1, img.second + 2,
+                                        Spannable.SPAN_INCLUSIVE_EXCLUSIVE
+                                    )
+
+                                }
+                            }
+
+
+                        }
+                    }
+                    binding.etThread.setText(span.toString())
+                    viewModel.isLoadData.value = false
+                }
+            }
+        }, this)
+
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
     }
 
-    private fun setActionBar() {
+    private fun setActionBar(title: String) {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = ""
+        binding.toolbarTitle.text = title
     }
 
     override fun handleDataTopic(data: Set<Topic>) {
@@ -370,4 +458,6 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
             .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         binding.etThread.setText(data.toString())
     }
+
+
 }

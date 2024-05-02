@@ -20,19 +20,39 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <TextView
+            <LinearLayout
+                android:orientation="horizontal"
                 tools:visibility="visible"
                 android:visibility="gone"
                 android:id="@+id/tv_delete"
                 android:textColor="@color/white"
                 android:gravity="end|center"
                 android:background="@color/light_green"
-                android:padding="10dp"
-                android:paddingEnd="15dp"
+                android:padding="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hapus postingan"
-                />
+                >
+                <ImageButton
+                    android:id="@+id/btn_delete"
+                    android:padding="5dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/icon_trash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <RelativeLayout
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <ImageButton
+                    android:id="@+id/btn_edit"
+                    android:padding="5dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/icon_pencil"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+
+            </LinearLayout>
             <LinearLayout
                 android:id="@+id/ll_item_post"
                 android:layout_width="match_parent"

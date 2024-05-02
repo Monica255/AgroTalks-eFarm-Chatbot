@@ -20,6 +20,6 @@ class ChatbotRepository @Inject constructor(
     override suspend fun sendChat(data: Chat) = firebaseDataSource.sendChat(data)
     override fun getChats(): MutableLiveData<List<Chat>?> = firebaseDataSource.getChats()
     override suspend fun getResponseChatbot(msg: String): Flow<Resource<ResponseChatbot>> = remoteDataSource.getResponseChatbot(msg)
-    override suspend fun getThreadChatbot(text: String): Flow<Resource<ChatBot>> = remoteDataSource.getChatThread(text)
+    override suspend fun getThreadChatbot(text: String): Flow<Resource<List<ChatBot>>> = remoteDataSource.getChatThread(text)
 
 }

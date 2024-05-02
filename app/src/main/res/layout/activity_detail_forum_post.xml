@@ -89,16 +89,10 @@
                     android:orientation="vertical"
                     android:paddingBottom="@dimen/margin_buttom">
 
-                    <ImageView
-                        android:id="@+id/img_header_post"
+                    <com.example.efarm.ui.forum.upload.CustomMedia
+                        android:id="@+id/customa_view"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:adjustViewBounds="true"
-                        android:background="@drawable/placeholder"
-                        android:maxHeight="250dp"
-                        android:src="@drawable/placeholder"
-                        android:visibility="gone"
-                        tools:visibility="visible" />
+                        android:layout_height="wrap_content"/>
 
 
                     <LinearLayout

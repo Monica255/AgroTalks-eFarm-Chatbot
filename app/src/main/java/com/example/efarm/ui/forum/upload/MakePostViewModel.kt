@@ -22,6 +22,7 @@ import javax.inject.Inject
 class MakePostViewModel @Inject constructor(
     private val forumUseCase: ForumUseCase, private val authUseCase: AuthUseCase
 ) : ViewModel() {
+    var isLoadData=MutableLiveData<Boolean>()
     var tempThread=SpannableStringBuilder()
     var topics = MutableLiveData<Set<Topic>>()
     var topicsCommodity= MutableLiveData<MutableList<Topic>>()

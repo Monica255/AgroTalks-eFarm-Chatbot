@@ -13,5 +13,5 @@ class ChatbotInteractor @Inject constructor(private val repo:IChatbotRepository)
     override suspend fun sendChat(data: Chat): MutableLiveData<Resource<String>> = repo.sendChat(data)
     override fun getChats(): MutableLiveData<List<Chat>?> = repo.getChats()
     override suspend fun getResponseChatbot(msg: String): Flow<Resource<ResponseChatbot>> = repo.getResponseChatbot(msg)
-    override suspend fun getThreadChatbot(text: String): Flow<Resource<ChatBot>> = repo.getThreadChatbot(text)
+    override suspend fun getThreadChatbot(text: String): Flow<Resource<List<ChatBot>>> = repo.getThreadChatbot(text)
 }
